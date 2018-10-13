@@ -1,5 +1,4 @@
 #include <SDL2/SDL.h>
-#include <stdio.h>
 #include <SDL2/SDL_image.h>
 
 /*
@@ -47,21 +46,6 @@ int get_color_array(SDL_Surface *image, size_t w, size_t h, unsigned char *final
 	return 0;
 }
 
-void print_Array(unsigned char array[], size_t w, size_t h) //prints all values from an array
-{
-	size_t k;
-	k=0;
-	for(size_t i=0; i<w; i++)
-	{
-			for (size_t j=0; j<h; j++)
-			{
-				printf("%d|",array[k]);
-				k++;
-			}
-			printf("\n");
-	}
-}
-
 size_t getWidth(char path[])
 {
 	image=IMG_Load(path); //loads the image
@@ -104,33 +88,9 @@ int parse_bmp(unsigned char *final_array, char path[])
 
 	get_color_array(image, w, h, final_array); //fills the pixel array with all the pixels of the image
 	
-	
-	//print_Array(final_array, w, h); //prints the array
 
 	SDL_FreeSurface(image); //cleanup
 	return 0;
 
 
-}
-
-int main() //example of use in another function
-{	
-	char path[]="TEST3.bmp";
-
-
-	//not very optimized, feel free to modify if you have an idea
-	size_t width=getWidth(path);
-	size_t height=getHeight(path);  
-
-
-	unsigned char final_array[width*height]; //initialization of the pixel array
-
-	if (parse_bmp(final_array, path)==1)
-	{
-		printf("File not found !");
-		return 1;
-	}
-	
-	print_Array(final_array, width, height);
-	return 0;
 }
