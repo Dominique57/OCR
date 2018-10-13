@@ -127,8 +127,8 @@ int main() //example of use in another function
 
 	if (parse_bmp(final_array, path)==1)
 	{
-		printf("File not found !")
-		return 1
+		printf("File not found !");
+		return 1;
 	}
 	
 	print_Array(final_array, width, height);
