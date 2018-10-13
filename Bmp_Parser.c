@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <SDL2/SDL_image.h>
 
+/*
+Compile with gcc -Wall -Wextra -std=c99 -lSDL2 -lSDL2_image
+*/
+
 SDL_Surface *image=NULL; //surface initialization
 
 struct Pixel { //pixel structure
@@ -114,16 +118,19 @@ int main() //example of use in another function
 	char path[]="TEST3.bmp";
 
 
-	//not very optimized, feel free to modify if you have an idea 
+	//not very optimized, feel free to modify if you have an idea
 	size_t width=getWidth(path);
 	size_t height=getHeight(path);  
 
 
 	unsigned char final_array[width*height]; //initialization of the pixel array
 
-	parse_bmp(final_array, path);
+	if (parse_bmp(final_array, path)==1)
+	{
+		printf("File not found !")
+		return 1
+	}
 	
 	print_Array(final_array, width, height);
 	return 0;
 }
-
