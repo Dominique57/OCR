@@ -1,18 +1,21 @@
 #include <SDL2/SDL.h>
-#include <stdio.h>
 #include <SDL2/SDL_image.h>
 
-SDL_Surface *image=NULL; //initialisation de la surface
+/*
+Compile with gcc -Wall -Wextra -std=c99 -lSDL2 -lSDL2_image
+*/
 
-struct Pixel {
+SDL_Surface *image=NULL; //surface initialization
+
+struct Pixel { //pixel structure
     int r;
     int g;
     int b;
 } Pixel;
 
-struct Pixel get_color(SDL_Surface *image, int x, int y, int pixel_size)
+struct Pixel get_color(SDL_Surface *image, int x, int y) //returns a Pixel at x,y coordinates with it's color attributes from a surface
 {
-	uint8_t *pixel=(uint8_t *)image->pixels + y * image->pitch + x*pixel_size;
+	uint8_t *pixel=(uint8_t *)image->pixels + y * image->pitch + x*image->format->BytesPerPixel; //finds the pixel
 	struct Pixel pix;
 	
 	pix.r=pixel[0];
@@ -23,7 +26,7 @@ struct Pixel get_color(SDL_Surface *image, int x, int y, int pixel_size)
 }
 
 
-int get_color_array(SDL_Surface *image, int pixel_size, size_t w, size_t h, unsigned char *final_array)
+int get_color_array(SDL_Surface *image, size_t w, size_t h, unsigned char *final_array) //puts all pixels from a surface in supplied array
 {
 	struct Pixel pix;
 	float moyenne=0;
@@ -32,50 +35,62 @@ int get_color_array(SDL_Surface *image, int pixel_size, size_t w, size_t h, unsi
 	{
 		for (size_t j=0; j<w; j++)
 		{
-			pix=get_color(image, j, i, pixel_size);
-			moyenne=((float)pix.r+(float)pix.g+(float)pix.b)/(float)3;
+			pix=get_color(image, j, i);
+			moyenne=((float)pix.r+(float)pix.g+(float)pix.b)/(float)3; //(r+g+b)/3
 			
-			final_array[k]=moyenne>128;
+			final_array[k]=moyenne<128;
 			
-			//final_array[3*k]=pix.r;
-			//final_array[3*k+1]=pix.g;
-			//final_array[3*k+2]=pix.b;
 			k++;
 		}
 	}
 	return 0;
 }
 
-
-int parse_bmp(char path[])
+size_t getWidth(char path[])
 {
-	//charge l'image
-	image=IMG_Load(path);
+	image=IMG_Load(path); //loads the image
 	
 
 	if (image==NULL)
 	{
-		return 1; //fichier non trouve
+		return -1; //file not found
 	}
-	size_t w=image->w;
-	size_t h=image->h;
-	printf("w:%ld, h:%ld\n", w, h); //affiche la largeur et hauteur de l'image
-
-	int pixel_size=image->format->BytesPerPixel;
-	printf ("surface_w:%d, pixel_size:%d\n",image->pitch,pixel_size);
-	
-	unsigned char final_array[w*h];
-	get_color_array(image, pixel_size, w, h, final_array);
-	
-	
-	printf("Pixel0: %d \n",final_array[0]);
-	return 0;
-
-
+	return image->w;
 }
 
-int main()
+size_t getHeight(char path[])
 {
-	printf ("%d\n",parse_bmp("TEST2.bmp"));
+	image=IMG_Load(path); //loads the image
+	
+
+	if (image==NULL)
+	{
+		return -1; //file not found
+	}
+	return image->h;
+}
+
+int parse_bmp(unsigned char *final_array, char path[])
+{
+	image=IMG_Load(path); //loads the image
+	
+
+	if (image==NULL)
+	{
+		return 1; //file not found
+	}
+	size_t w=image->w; //width of the image
+	size_t h=image->h; //height of the image
+
+
+	
+	
+
+	get_color_array(image, w, h, final_array); //fills the pixel array with all the pixels of the image
+	
+
+	SDL_FreeSurface(image); //cleanup
 	return 0;
+
+
 }
