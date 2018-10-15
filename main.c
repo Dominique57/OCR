@@ -23,7 +23,7 @@ void print_Array(unsigned char *array, size_t w, size_t h) //prints all values f
 
 Image tryRLSA()
 {
-	char path[] = "img/testTEXT2.bmp";
+	char path[] = "dataset/testTEXT2.bmp";
 	Image image;
 	image.w = getWidth(path);
 	image.h = getHeight(path);
@@ -43,7 +43,7 @@ Image tryRLSA()
 int main ()
 {
 	// Simon's testing
-	char path[]="img/TEST3.bmp";
+	char path[]="dataset/TEST3.bmp";
 
 	Image image;
 	// not very optimized, feel free to optimize
