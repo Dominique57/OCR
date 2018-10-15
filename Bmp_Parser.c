@@ -29,16 +29,16 @@ struct Pixel get_color(SDL_Surface *image, int x, int y) //returns a Pixel at x,
 int get_color_array(SDL_Surface *image, size_t w, size_t h, unsigned char *final_array) //puts all pixels from a surface in supplied array
 {
 	struct Pixel pix;
-	float moyenne=0;
+	float average=0;
 	int k=0;
 	for (size_t i=0; i<h; i++)
 	{
 		for (size_t j=0; j<w; j++)
 		{
 			pix=get_color(image, j, i);
-			moyenne=((float)pix.r+(float)pix.g+(float)pix.b)/(float)3; //(r+g+b)/3
+			average=((float)pix.r+(float)pix.g+(float)pix.b)/(float)3; //(r+g+b)/3
 			
-			final_array[k]=moyenne<128;
+			final_array[k]=average<128;
 			
 			k++;
 		}
