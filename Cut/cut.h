@@ -1,9 +1,10 @@
 #ifndef CUT_H
 #define CUT_H
 
-Rect CutBorder(Image image);
-void cutLine(Image image, Rect rect);
-void cutLine(Image image, Rect rect);
+#include "../type/image.h"
 
+Rect CutBorder(Image image);
+Image cutLine(Image image, Rect rect);
+void DrawRect(Rect rect, Image *image);
 
 #endif

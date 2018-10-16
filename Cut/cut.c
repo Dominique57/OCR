@@ -1,7 +1,8 @@
 #include <stdio.h>
-#include "../type/image.h"
+#include "cut.h"
 
-//rect de position autour du contenu de la page, decoupage de la narge
+//rect de position autour du contenu de la page, decoupage de la marge
+/*
 Rect CutBorder(Image image)
 {
     Rect rect;
@@ -71,45 +72,63 @@ Rect CutBorder(Image image)
     }
     return rect;
 }
+*/
 
-void cutLine(Image image, Rect rect)
+Image cutLine(Image image, Rect rect)
 {
-    int sumbpx = 0;
+    Image result;
+    result.w = image.w;
+    result.h = image.h;
+    int active = 1;
+    Rect inrect;
+    inrect.topLeft.x = rect.topLeft.x;
+    inrect.downRight.x = rect.downRight.x;
+    int endit = 0;
     for (int y = rect.topLeft.y; y < rect.downRight.y; ++y)
     {
-        for (int  = rect.topLeft.x; x < rect.downRight.x; ++x)
+        int x = rect.topLeft.x;
+        for (; x < rect.downRight.x; ++x)
         {
             int pos = y * image.w + x;
-            if  (image.data[x] == 1)
+            if (image.data[pos] == 1)
             {
-                sumbpx++;
-            }
-            else
-            {
-
+                if (active == 0)
+                {
+                    inrect.topLeft.y = ( y-1 == -1 )? 0 : y-1;
+                    active = 1;
+                }
+                break;
             }
         }
-
-        sumbpx = 0;
+        if (x == rect.downRight.x && active)
+        {
+            active = 0;
+            DrawRect(inrect, &result);
+            inrect.downRight.y = y;
+        }
     }
+    return result;
 }
 
-void cutLine(Image image, Rect rect)
+void DrawRect(Rect rect, Image *image)
 {
-    int nbWhiteLine = 0;
-    int nbLine = 0;
+    int i = 0;
+    while (i < 1000000000){i+=1;}
+    int ypos = rect.topLeft.y * (*image).w;
+    for (int x = rect.topLeft.x; x < rect.downRight.x; ++x)
+    {
+        int pos = ypos + x;
+        (*image).data[pos] = 2;
+    }
+    ypos = rect.downRight.y * (*image).w;
+    for (int x = rect.topLeft.x; x < rect.downRight.x; ++x)
+    {
+        int pos = ypos + x;
+        (*image).data[pos] = 2;
+    }
     for (int y = rect.topLeft.y; y < rect.downRight.y; ++y)
     {
-        int keep = 1;
-        for (int  = rect.topLeft.x; x < rect.downRight.x && keep; ++x)
-        {
-            int pos = y * image.w + x;
-            if  (image.data[x] == 1)
-            {
-                keep = 0
-            }
-        }
-
-        sumbpx = 0;
+        int pos = y * image->w;
+        (*image).data[pos] = 9;
     }
 }

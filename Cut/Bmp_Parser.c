@@ -1,6 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include "type/image.h"
+#include "../type/image.h"
 
 /*
 Compile with gcc -Wall -Wextra -std=c99 -lSDL2 -lSDL2_image
@@ -18,11 +18,11 @@ struct Pixel get_color(SDL_Surface *image, int x, int y) //returns a Pixel at x,
 {
 	uint8_t *pixel=(uint8_t *)image->pixels + y * image->pitch + x*image->format->BytesPerPixel; //finds the pixel
 	struct Pixel pix;
-	
+
 	pix.r=pixel[0];
 	pix.g=pixel[1];
 	pix.b=pixel[2];
-	
+
 	return pix;
 }
 
@@ -38,9 +38,9 @@ int get_color_array(SDL_Surface *image, size_t w, size_t h, unsigned char *final
 		{
 			pix=get_color(image, j, i);
 			average=((float)pix.r+(float)pix.g+(float)pix.b)/(float)3; //(r+g+b)/3
-			
+
 			final_array[k]=average<128;
-			
+
 			k++;
 		}
 	}
@@ -50,7 +50,7 @@ int get_color_array(SDL_Surface *image, size_t w, size_t h, unsigned char *final
 size_t getWidth(char path[])
 {
 	image=IMG_Load(path); //loads the image
-	
+
 
 	if (image==NULL)
 	{
@@ -62,7 +62,7 @@ size_t getWidth(char path[])
 size_t getHeight(char path[])
 {
 	image=IMG_Load(path); //loads the image
-	
+
 
 	if (image==NULL)
 	{
@@ -74,7 +74,7 @@ size_t getHeight(char path[])
 int parse_bmp(unsigned char *final_array, char path[])
 {
 	image=IMG_Load(path); //loads the image
-	
+
 
 	if (image==NULL)
 	{
@@ -87,7 +87,7 @@ int parse_bmp(unsigned char *final_array, char path[])
 
 
 	get_color_array(image, w, h, final_array); //fills the pixel array with all the pixels of the image
-	
+
 
 	SDL_FreeSurface(image); //cleanup
 	return 0;

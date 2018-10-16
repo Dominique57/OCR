@@ -2,9 +2,6 @@
 #include "Bmp_Parser.h"
 #include "type/image.h"
 #include "RLSA/RLSA.h"
-#include "RLSA.h"
-
-
 
 void print_Array(unsigned char *array, size_t w, size_t h) //prints all values from an array
 {
