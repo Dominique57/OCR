@@ -85,6 +85,6 @@ int main ()
 
 	Image test = tryRLSA();
 	print_Array(test.data, test.w, test.h);
-	array_to_bmp(test.data, test.w, test.h, path);
+	array_to_bmp(test.data, sizeof(test.data), sizeof(test.data[0]), path); //call with array dimensions
 	return 0;
 }
