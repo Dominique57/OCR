@@ -24,6 +24,11 @@ Image RLSA_v(Image image, int thresh)
             {
                 if (flag == 0 && count <= thresh)
                 {
+                    for (size_t k = j - count; k < j; ++k)
+                    {
+                        int pos2 = i * image.h + k;
+                        result.data[pos2] = 1;
+                    }
                     // TODO : set pixel black following this rule
                     // output(Rect(i, j - count, 1, count)).setTo(Scalar::all(0));
                 }
@@ -58,6 +63,11 @@ Image RLSA_h(Image image, int thresh)
             {
                 if (flag == 0 && count <= thresh)
                 {
+                    for (size_t k = i - count; k < i; ++k)
+                    {
+                        int pos2 = j * image.w + k;
+                        result.data[pos2] = 1;
+                    }
                     // output(Rect(i - count, j, count, 1)).setTo(Scalar::all(0));
                 }
                 flag = 1;

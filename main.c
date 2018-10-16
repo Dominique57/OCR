@@ -21,6 +21,28 @@ void print_Array(unsigned char *array, size_t w, size_t h) //prints all values f
 	}
 }
 
+void print_image(Image im) //prints all values from an array
+{
+    unsigned char *array = im.data;
+    size_t h = im.h;
+    size_t w = im.w;
+    size_t k;
+    k=0;
+    for(size_t i=0; i<h; i++)
+    {
+        for (size_t j=0; j<237; j++)
+        {
+            printf("%d",array[k]);
+            k++;
+        }
+        for (size_t l = 237; l <w ; ++l)
+        {
+            k++;
+        }
+        printf("\n");
+    }
+}
+
 Image tryRLSA()
 {
 	char path[] = "dataset/testTEXT2.bmp";

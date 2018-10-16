@@ -15,7 +15,7 @@ Image RLSA_v(Image image, int thresh)
         for (size_t j = 0; j < image.h; j++)
         {
             int pos = i * image.h +  j;
-            if (image.data[ pos ] == 0) // si blanc
+            if (image.data[ pos ] == 0)
             {
                 flag = 0;
                 count++;
@@ -24,9 +24,13 @@ Image RLSA_v(Image image, int thresh)
             {
                 if (flag == 0 && count <= thresh)
                 {
-                    // TODO : set pixel black following this rule
-                    // output(Rect(i, j - count, 1, count)).setTo(Scalar::all(0));
+                    for (size_t k = j - count; k < j; ++k)
+                    {
+                        int pos2 = i * image.h + k;
+                        result.data[pos2] = 1;
+                    }
                 }
+                result.data[pos] = 1;
                 flag = 1;
                 count = 0;
             }
@@ -58,8 +62,13 @@ Image RLSA_h(Image image, int thresh)
             {
                 if (flag == 0 && count <= thresh)
                 {
-                    // output(Rect(i - count, j, count, 1)).setTo(Scalar::all(0));
+                    for (size_t k = i - count; k < i; ++k)
+                    {
+                        int pos2 = j * image.w + k;
+                        result.data[pos2] = 1;
+                    }
                 }
+                result.data[pos] = 1;
                 flag = 1;
                 count = 0;
             }
@@ -97,3 +106,7 @@ Image RLSA_launch(Image image, int offsetv, int offseth)
 {
     return RLSAassemble(RLSA_h(image, offseth), RLSA_v(image, offsetv));
 }
+
+
+
+
