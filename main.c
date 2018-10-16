@@ -85,5 +85,6 @@ int main ()
 
 	Image test = tryRLSA();
 	print_Array(test.data, test.w, test.h);
+	array_to_bmp(test.data, test.w, test.h, path);
 	return 0;
 }

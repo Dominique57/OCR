@@ -94,3 +94,34 @@ int parse_bmp(unsigned char *final_array, char path[])
 
 
 }
+
+int array_to_bmp(unsigned char *final_array, size_t width, size_t height, char path[])
+{
+	image=IMG_Load(path);
+	size_t w=width;
+	size_t h=height;
+	size_t k=0;
+	uint8_t *pixel;
+	int toPut;
+	for(size_t i=0; i<w; i++)
+	{
+		for (size_t j=0; j<h; j++)
+		{
+			pixel=(uint8_t *)image->pixels + i * image->pitch + j*image->format->BytesPerPixel;
+			if (final_array[k]==0)
+			{
+				toPut=255;
+			}
+			else
+			{
+				toPut=0;
+			}
+			pixel[0]=toPut;
+			pixel[1]=toPut;
+			pixel[2]=toPut;
+			k++;
+		}
+	}
+	SDL_SaveBMP(image, "image001.bmp"); //save surface to bmp file
+	return 0;
+}
