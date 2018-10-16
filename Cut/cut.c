@@ -79,11 +79,10 @@ Image cutLine(Image image, Rect rect)
     Image result;
     result.w = image.w;
     result.h = image.h;
-    int active = 1;
+    int active = 0;
     Rect inrect;
     inrect.topLeft.x = rect.topLeft.x;
     inrect.downRight.x = rect.downRight.x;
-    int endit = 0;
     for (int y = rect.topLeft.y; y < rect.downRight.y; ++y)
     {
         int x = rect.topLeft.x;
@@ -100,11 +99,11 @@ Image cutLine(Image image, Rect rect)
                 break;
             }
         }
-        if (x == rect.downRight.x && active)
+        if (x == rect.downRight.x && active == 1)
         {
             active = 0;
-            DrawRect(inrect, &result);
             inrect.downRight.y = y;
+            DrawRect(inrect, &result);
         }
     }
     return result;
@@ -129,6 +128,6 @@ void DrawRect(Rect rect, Image *image)
     for (int y = rect.topLeft.y; y < rect.downRight.y; ++y)
     {
         int pos = y * image->w;
-        (*image).data[pos] = 9;
+        (*image).data[pos] = 2;
     }
 }
