@@ -6,6 +6,9 @@
 Compile with gcc -Wall -Wextra -std=c99 -lSDL2 -lSDL2_image
 */
 
+
+
+
 SDL_Surface *image=NULL; //surface initialization
 
 struct Pixel { //pixel structure
@@ -103,11 +106,12 @@ int array_to_bmp(unsigned char *final_array, size_t width, size_t height, char p
 	size_t k=0;
 	uint8_t *pixel;
 	int toPut;
-	for(size_t i=0; i<w; i++)
+	for(size_t i=0; i<h; i++)
 	{
-		for (size_t j=0; j<h; j++)
+		for (size_t j=0; j<w; j++)
 		{
 			pixel=(uint8_t *)image->pixels + i * image->pitch + j*image->format->BytesPerPixel;
+			/*
 			if (final_array[k]==0)
 			{
 				toPut=255;
@@ -116,12 +120,27 @@ int array_to_bmp(unsigned char *final_array, size_t width, size_t height, char p
 			{
 				toPut=0;
 			}
+			*/
+			toPut = (final_array[k] == 1)? 0 : 255;
 			pixel[0]=toPut;
 			pixel[1]=toPut;
 			pixel[2]=toPut;
+			if ( final_array[k] == 2)
+			{
+				pixel[0]=255;
+				pixel[1]=0;
+				pixel[2]=0;
+			}
+			else if ( final_array[k] == 3)
+			{
+				pixel[0]=0;
+				pixel[1]=0;
+				pixel[2]=255;
+			}
 			k++;
 		}
 	}
 	SDL_SaveBMP(image, "image001.bmp"); //save surface to bmp file
 	return 0;
 }
+

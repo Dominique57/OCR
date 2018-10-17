@@ -43,20 +43,20 @@ void print_image(Image im) //prints all values from an array
 
 int main()
 {
-    char path[] = "../dataset/testTEXT2.bmp";
+    char path[] = "../dataset/testTEXT.bmp";
     Image image;
     image.h = getHeight(path);
     image.w = getWidth(path);
     unsigned char final_array[ image.h * image.w ];
+    printf("%zu\n",image.h * image.w);
     image.data = final_array;
     if (parse_bmp(final_array, path)==1)
     {
         printf("File not found !\n");
         return 1;
     }
-    print_image(image);
-    printf("\n\n\n");
-
+    // print_image(image);
+    // printf("\n\n\n");
     Image edited;
     Rect rect;
     Cord left;
@@ -68,6 +68,7 @@ int main()
     right.y = image.h;
     rect.downRight = right;
     edited = cutLine(image, rect);
-    print_image(edited);
+    // print_image(edited);
+    array_to_bmp(edited.data, edited.w, edited.h, path);
     return 0;
 }

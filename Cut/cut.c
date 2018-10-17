@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "cut.h"
 
-//rect de position autour du contenu de la page, decoupage de la marge
+//rect de position autour du contenu de la page, découpage de la marge
 /*
 Rect CutBorder(Image image)
 {
@@ -74,6 +74,37 @@ Rect CutBorder(Image image)
 }
 */
 
+
+void print_rect(Image img, Rect rect)
+{
+    for(int y=rect.topLeft.y; y<rect.downRight.y; y++)
+    {
+        for (int x= rect.topLeft.y; x<230; x++)
+        {
+            int pos = y * img.w + x;
+            printf("%d", img.data[pos]);
+        }
+        printf("\n");
+    }
+}
+
+Image CopyImage(Image image)
+{
+    Image result;
+    result.w = image.w;
+    result.h = image.h;
+    unsigned char data[ result.w * result.h ];
+    result.data = data;
+
+    int max = result.w * result.h;
+    for (int k = 0; k < max; ++k)
+    {
+        data[k] = image.data[k];
+    }
+    return result;
+}
+
+
 Image cutLine(Image image, Rect rect)
 {
     Image result;
@@ -81,6 +112,7 @@ Image cutLine(Image image, Rect rect)
     result.h = image.h;
     int active = 0;
     Rect inrect;
+
     inrect.topLeft.x = rect.topLeft.x;
     inrect.downRight.x = rect.downRight.x;
     for (int y = rect.topLeft.y; y < rect.downRight.y; ++y)
@@ -93,7 +125,7 @@ Image cutLine(Image image, Rect rect)
             {
                 if (active == 0)
                 {
-                    inrect.topLeft.y = ( y-1 == -1 )? 0 : y-1;
+                    inrect.topLeft.y = ( y == 0 )? 0 : y-1;
                     active = 1;
                 }
                 break;
@@ -104,6 +136,7 @@ Image cutLine(Image image, Rect rect)
             active = 0;
             inrect.downRight.y = y;
             DrawRect(inrect, &result);
+            CutChar(&image, inrect, &result);
         }
     }
     return result;
@@ -111,8 +144,6 @@ Image cutLine(Image image, Rect rect)
 
 void DrawRect(Rect rect, Image *image)
 {
-    int i = 0;
-    while (i < 1000000000){i+=1;}
     int ypos = rect.topLeft.y * (*image).w;
     for (int x = rect.topLeft.x; x < rect.downRight.x; ++x)
     {
@@ -125,9 +156,59 @@ void DrawRect(Rect rect, Image *image)
         int pos = ypos + x;
         (*image).data[pos] = 2;
     }
+    /*
     for (int y = rect.topLeft.y; y < rect.downRight.y; ++y)
     {
         int pos = y * image->w;
         (*image).data[pos] = 2;
     }
+    */
+}
+
+void CutChar(Image *image, Rect line, Image *result)
+{
+    int active = 0;
+    Rect charPos;
+    charPos.topLeft.y = line.topLeft.y;
+    charPos.downRight.y = line.downRight.y;
+    for (int x = line.topLeft.x; x < line.downRight.x; ++x)
+    {
+        int y = line.topLeft.y;
+        for (; y < line.downRight.y; ++y)
+        {
+            int pos = y * image->w + x;
+            if (image->data[pos] == 1 )
+            {
+                if  (active == 0)
+                {
+                    charPos.topLeft.x = ( x == 0 )? 0 : x-1;
+                    active = 1;
+                }
+                break;
+            }
+        }
+        if  (y == line.downRight.y && active == 1)
+        {
+            active = 0;
+            charPos.downRight.x = x;
+            DrawRect2(charPos, result);
+        }
+    }
+}
+
+void DrawRect2(Rect rect, Image *image)
+{
+    int xpos = rect.topLeft.x;
+    for (int y = rect.topLeft.y; y < rect.downRight.y; ++y)
+    {
+        int pos = xpos + y * image->w;
+        image->data[pos] = 3;
+    }
+    xpos = rect.downRight.x;
+    for (int y = rect.topLeft.y; y < rect.downRight.y; ++y)
+    {
+        int pos = xpos + y * image->w;
+        image->data[pos] = 3;
+    }
+
 }
