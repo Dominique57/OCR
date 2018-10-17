@@ -5,7 +5,7 @@
 
 Rect CutBorder(Image image);
 Image cutLine(Image image, Rect rect);
-void DrawRect(Rect rect, Image *image);
+void DrawRect(Rect rect, Image image);
 void CutChar(Image *image, Rect line, Image *result);
 void DrawRect2(Rect rect, Image *image);
 

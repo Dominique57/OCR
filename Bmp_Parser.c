@@ -111,16 +111,6 @@ int array_to_bmp(unsigned char *final_array, size_t width, size_t height, char p
 		for (size_t j=0; j<w; j++)
 		{
 			pixel=(uint8_t *)image->pixels + i * image->pitch + j*image->format->BytesPerPixel;
-			/*
-			if (final_array[k]==0)
-			{
-				toPut=255;
-			}
-			else
-			{
-				toPut=0;
-			}
-			*/
 			toPut = (final_array[k] == 1)? 0 : 255;
 			pixel[0]=toPut;
 			pixel[1]=toPut;
