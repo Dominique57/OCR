@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <math.h>
 
-const int nbInput = 2;
-const int nbHidden = 3;
+const size_t nbInput = 2;
+const size_t nbHidden = 3;
 const float eta = 0.9f;
-const int epochs = 10000;
+const size_t epochs = 10000;
 
 
 float Sigmoid(float x, int deriv)
@@ -25,7 +25,7 @@ int main()
 	
 
 	//getting number of possible combinations
-	const int inputLen = 1<<nbInput;
+	const size_t inputLen = 1<<nbInput;
 	
 	//generate every possible inputs
 	float inputs[inputLen][nbInput];
