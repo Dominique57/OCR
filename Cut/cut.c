@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include "cut.h"
+
 /*
  * Renvoie les coordonnees du contenue de la page hormis des marges
+ * param :
+ *      image: image sur laquelle détécter les marges
  */
 Rect CutBorder(Image image)
 {
@@ -40,7 +43,7 @@ Rect CutBorder(Image image)
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
             {
-                rect.downRight.x = x;
+                rect.downRight.x = x + 1;
                 keep = 0;
             }
         }
@@ -68,16 +71,19 @@ Rect CutBorder(Image image)
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
             {
-                rect.downRight.y = y;
+                rect.downRight.y = y + 1;
                 keep = 0;
             }
         }
     }
+    DrawRect(rect, image, 4, 4);
     return rect;
 }
 
 /*
  * Prend une image en parametre et en renvoie une copie
+ * param :
+ *      image: image sur laquelle copier les informations
  */
 Image CopyImage(Image image)
 {
@@ -98,16 +104,21 @@ Image CopyImage(Image image)
 /*
  * Prend une image en parametre et la renvoie modifie avec decoupage
  * ligne ET char
+ * param :
+ *      image: image sur laquelle lire les informations
+ *      rect: coordonnées de la ligne sur laquelle faire le decoupage
+ *      result: image sur laquelle appliquer le résultat
  */
-Image cutLine(Image image, Rect rect)
+void cutLine(Image image, Rect rect, Image result)
 {
+    /*
     Image result;
     result.w = image.w;
     result.h = image.h;
     result.data = image.data;
+    */
     int active = 0;
     Rect inrect;
-
     inrect.topLeft.x = rect.topLeft.x;
     inrect.downRight.x = rect.downRight.x;
     for (int y = rect.topLeft.y; y < rect.downRight.y; ++y)
@@ -130,36 +141,20 @@ Image cutLine(Image image, Rect rect)
         {
             active = 0;
             inrect.downRight.y = y;
-            DrawRect(inrect, result);
-            CutChar(&image, inrect, &result);
+            DrawRect_hor(inrect, result, 2);
+            CutChar(image, inrect, result);
         }
     }
-    return result;
 }
 
 /*
- * Trace les lignes horizontales pour le decoupage par ligne
+ * Applique le decoupage des caractere a l'image donne sur la zone rect
+ * param :
+ *      image: image sur laquelle lire les informations
+ *      rect: coordonnées de la ligne sur laquelle faire le decoupage
+ *      result: image sur laquelle appliquer le résultat
  */
-void DrawRect(Rect rect, Image image)
-{
-    int ypos = rect.topLeft.y * image.w;
-    for (int x = rect.topLeft.x; x <= rect.downRight.x; ++x)
-    {
-        int pos = ypos + x;
-        image.data[pos] = 2;
-    }
-    ypos = rect.downRight.y * image.w;
-    for (int x = rect.topLeft.x; x <= rect.downRight.x; ++x)
-    {
-        int pos = ypos + x;
-        image.data[pos] = 2;
-    }
-}
-
-/*
- * Applique le decoupage des caractere a l'image donnee en parametre
- */
-void CutChar(Image *image, Rect line, Image *result)
+void CutChar(Image image, Rect line, Image result)
 {
     int active = 0;
     Rect charPos;
@@ -170,8 +165,8 @@ void CutChar(Image *image, Rect line, Image *result)
         int y = line.topLeft.y;
         for (; y < line.downRight.y; ++y)
         {
-            int pos = y * image->w + x;
-            if (image->data[pos] == 1 )
+            int pos = y * image.w + x;
+            if (image.data[pos] == 1 )
             {
                 if  (active == 0)
                 {
@@ -185,27 +180,96 @@ void CutChar(Image *image, Rect line, Image *result)
         {
             active = 0;
             charPos.downRight.x = x;
-            DrawRect2(charPos, result);
+            DrawRect_ver(charPos, result, 3);
         }
     }
 }
 
 /*
- * Applique les barrs verticales pour le decoupage des caracteres
+ * Trace les le contour du carré du rect dans l'image
+ * param :
+ *      rect: coordonnées du contour
+ *      image: image sur laquelle travailler
+ *      hor_val: valeur a appliquer horizontalement
+ *      ver_val: valeur a appliquer verticalement
+ * Remarques : les coins seront definis par hor_val
  */
-void DrawRect2(Rect rect, Image *image)
+void DrawRect(Rect rect, Image image, int hor_val, int ver_val)
+{
+    DrawRect_ver(rect, image, ver_val);
+    DrawRect_hor(rect, image, hor_val);
+}
+
+/*
+ * Trace les le contour horizontal du carré du rect dans l'image
+ * param :
+ *      rect: coordonnées du contour
+ *      image: image sur laquelle travailler
+ *      val: valeur a appliquer
+ */
+void DrawRect_hor(Rect rect, Image image, int val)
+{
+    // dessein des lignes horizontales
+    int ypos = rect.topLeft.y * image.w;
+    for (int x = rect.topLeft.x; x <= rect.downRight.x; ++x)
+    {
+        int pos = ypos + x;
+        image.data[pos] = val;
+    }
+    ypos = rect.downRight.y * image.w;
+    for (int x = rect.topLeft.x; x <= rect.downRight.x; ++x)
+    {
+        int pos = ypos + x;
+        image.data[pos] = val;
+    }
+}
+
+/*
+ * Trace les le contour vertical du carré du rect dans l'image
+ * param :
+ *      rect: coordonnées du contour
+ *      image: image sur laquelle travailler
+ *      val: valeur a appliquer
+ */
+void DrawRect_ver(Rect rect, Image image, int val)
 {
     int xpos = rect.topLeft.x;
     for (int y = rect.topLeft.y; y <= rect.downRight.y; ++y)
     {
-        int pos = xpos + y * image->w;
-        image->data[pos] = 3;
+        int pos = xpos + y * image.w;
+        image.data[pos] = val;
     }
     xpos = rect.downRight.x;
     for (int y = rect.topLeft.y; y <= rect.downRight.y; ++y)
     {
-        int pos = xpos + y * image->w;
-        image->data[pos] = 3;
+        int pos = xpos + y * image.w;
+        image.data[pos] = val;
     }
+}
 
+/*
+ * Trace les le contour vertical du carré du rect dans l'image
+ * param :
+ *      image: image sur laquelle travailler
+ *      newImage: bool to know if image shoould be modified or created
+ */
+Image Parse_Image(Image image, int newImage)
+{
+    Image result = image;
+    if (newImage)
+    {
+        result = CopyImage(image);
+    }
+    // Rect border = CutBorder(image);
+    Cord left;
+    left.x = 0;
+    left.y = 0;
+    Cord right;
+    right.x = image.w;
+    right.y = image.h;
+    Rect border;
+    border.topLeft = left;
+    border.downRight = right;
+    cutLine(image, border, result);
+    return result;
 }

@@ -98,6 +98,26 @@ int parse_bmp(unsigned char *final_array, char path[])
 
 }
 
+int load_image(char path[], Image *image)
+{
+	(*image).h = getHeight(path);
+	(*image).w = getWidth(path);
+	unsigned char *final_array = NULL;
+	final_array = malloc(((*image).h * (*image).w) * sizeof(unsigned char));
+	if (final_array == NULL)
+	{
+		printf("Not enough memory avaible !\n");
+		return 1;
+	}
+	(*image).data = final_array;
+	if (parse_bmp(final_array, path)==1)
+	{
+		printf("File not found !\n");
+		return 1;
+	}
+	return 0;
+}
+
 int array_to_bmp(unsigned char *final_array, size_t width, size_t height, char path[])
 {
 	image=IMG_Load(path);

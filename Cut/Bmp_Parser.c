@@ -83,16 +83,30 @@ int parse_bmp(unsigned char *final_array, char path[])
 	size_t w=image->w; //width of the image
 	size_t h=image->h; //height of the image
 
-
-
-
 	get_color_array(image, w, h, final_array); //fills the pixel array with all the pixels of the image
-
 
 	SDL_FreeSurface(image); //cleanup
 	return 0;
+}
 
-
+int load_image(char path[], Image *image)
+{
+    (*image).h = getHeight(path);
+    (*image).w = getWidth(path);
+    unsigned char *final_array = NULL;
+    final_array = malloc(((*image).h * (*image).w) * sizeof(unsigned char));
+    if (final_array == NULL)
+    {
+        printf("Not enough memory avaible !\n");
+        return 1;
+    }
+    (*image).data = final_array;
+    if (parse_bmp(final_array, path)==1)
+    {
+        printf("File not found !\n");
+        return 1;
+    }
+    return 0;
 }
 
 int array_to_bmp(unsigned char *final_array, size_t width, size_t height, char path[])
@@ -124,7 +138,7 @@ int array_to_bmp(unsigned char *final_array, size_t width, size_t height, char p
 				pixel[1]=0;
 				pixel[2]=255;
 			}
-			else if ( final_array[k] == 3)
+			else if ( final_array[k] == 4)
 			{
 				pixel[0]=0;
 				pixel[1]=255;
