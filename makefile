@@ -1,19 +1,27 @@
+CFLAGS = -Wall -Wextra -std=c99
+
 all: OCR
 
-OCR: main.o Bmp_Parser.o RLSA.o Xor
-	gcc `pkg-config gtk+-3.0 sdl2 --cflags` Bmp_Parser.o RLSA.o main.o -o OCR `pkg-config gtk+-3.0 sdl2 --libs` -lSDL2_image
-
-RLSA.o: RLSA.c
-	gcc -Wall -Wextra -std=c99 -c RLSA.c
-
-Bmp_Parser.o: Bmp_Parser.c
-	gcc -Wall -Wextra -std=c99 -c Bmp_Parser.c 
+OCR: main.o Bmp_Parser.o RLSA.o cut.o Xor
+	gcc `pkg-config --cflags gtk+-3.0` *.o -o OCR `pkg-config --libs gtk+-3.0 ` -lSDL2 -lSDL2_image
 
 main.o: main.c
-	gcc -Wall -Wextra -std=c99 -c main.c
+	gcc -c main.c `pkg-config --cflags --libs gtk+-3.0`
+
+Bmp_Parser.o: Bmp_Parser.c
+	gcc -c Bmp_Parser.c 
+
+#image.o: type/image.c
+	#gcc -c type/image.c
+
+RLSA.o: RLSA.c
+	gcc -c RLSA.c
+
+cut.o: cut.c
+	gcc -c cut.c
 
 Xor: Xor.c
-	gcc -Wall -Wextra -std=c99 Xor.c -o Xor -lm
+	gcc Xor.c -o Xor -lm
 
 clean:
 	rm *.o;
