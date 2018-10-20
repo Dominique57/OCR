@@ -56,7 +56,7 @@ void* Dequeue(Queue *q)
 {
     if (q->isEmpty)
     {
-        return 0;
+        return NULL;
     }
     else
     {

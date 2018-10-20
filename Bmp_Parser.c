@@ -179,6 +179,12 @@ int array_to_bmp(unsigned char *arr, size_t w, size_t h, char path[], char *n)
                 pixel[1]=0;
                 pixel[2]=255;
             }
+            else if ( arr[k] == 4)
+            {
+                pixel[0]=0;
+                pixel[1]=255;
+                pixel[2]=0;
+            }
             k++;
         }
     }

@@ -47,13 +47,12 @@ void print_image(Image im)
 int main()
 {
     char path[] = "../dataset/tryme.bmp";
-    Image image;
-    load_image(path, &image);
+    Image image1;
+    load_image(path, &image1);
+    Image result = image1;
+    result = Parse_Image(image1, 0);
 
-    Image result = image;
-    result = Parse_Image(image, 0);
-
-    array_to_bmp(result.data, result.w, result.h, path, "test.bmp");
+    array_to_bmp(result.data, result.w, result.h, path, "test0.bmp");
 
     return 0;
 }

@@ -1,7 +1,149 @@
 #include "cut.h"
 
+
+
 /*
- * Renvoie les coordonnees du contenue de la page hormis des marges
+ * determine la moyenne des espaces d'une ligne
+ * param :
+ *      image: image sur laquelle lire les informations
+ *      rect: coordonnées de la ligne sur laquelle faire la moyenne
+ */
+int GetLineThresold(Image image, Rect line)
+{
+    // go to first col with black pixels
+    int keep = 1;
+    int x = line.topLeft.x;
+    for (; x < line.downRight.x && keep; ++x)
+    {
+        for (int y = line.topLeft.y; y < line.downRight.y; ++y)
+        {
+            int pos = y * image.w + x;
+            if (image.data[pos] == 1)
+            {
+                keep = 0;
+            }
+        }
+    }
+
+    int active = 0;
+    unsigned long colCount = 0;
+    unsigned long bufferCount = 0;
+    unsigned long spaceCount = 0;
+
+    /*
+    Rect rect;
+    rect.topLeft.y = line.topLeft.y;
+    rect.downRight.y = line.downRight.y;
+    */
+
+    // first line with black piexls, count every space and length till no black pixels no more
+    for (; x < line.downRight.x; ++x)
+    {
+        int y = line.topLeft.y;
+        for (; y < line.downRight.y; ++y)
+        {
+            int pos = y * image.w + x;
+            if (image.data[pos] == 1)
+            {
+                if (active == 1)
+                {
+                    spaceCount++;
+                    colCount += bufferCount;
+                    bufferCount = 0;
+                    /*
+                    rect.downRight.x = x - 1;
+                    DrawRect(rect, image, 3, 3);
+                     */
+                }
+                active = 0;
+                break;
+            }
+
+        }
+        if  (y == line.downRight.y)
+        {
+            if (active == 0)
+            {
+                active = 1;
+                // rect.topLeft.x = x;
+            }
+            bufferCount++;
+        }
+    }
+    return (spaceCount != 0) ? colCount / spaceCount : 0;
+}
+
+/*
+ * Applique le decoupage des caractere a l'image donne sur la zone rect
+ * ET apelle GetLineThresold afin de deternimer une taille estimé d'espaces
+ * param :
+ *      image: image sur laquelle lire les informations
+ *      rect: coordonnées de la ligne sur laquelle faire le decoupage
+ *      result: image sur laquelle appliquer le résultat
+ *      f: fichier dans lequel ecrire le resultat de l'OCR
+ */
+void CutChar2(Image image, Rect line, Image result, FILE *f)
+{
+    int thresold = GetLineThresold(image, line);
+    thresold = 1.5 * thresold;
+    int xl = 0, xr = 0;
+
+    int active = 0;
+    Rect charPos;
+    charPos.topLeft.y = line.topLeft.y;
+    charPos.downRight.y = line.downRight.y;
+    for (int x = line.topLeft.x; x < line.downRight.x; ++x)
+    {
+        int y = line.topLeft.y;
+        for (; y < line.downRight.y; ++y)
+        {
+            int pos = y * image.w + x;
+            if (image.data[pos] == 1 )
+            {
+                if  (active == 0)
+                {
+                    charPos.topLeft.x = ( x == 0 )? 0 : x-1;
+                    active = 1;
+                    // calculer diff espace et comparer a thresold
+                    xr = x;
+                    if (xr - xl > thresold)
+                    {
+                        Rect rect;
+                        rect.topLeft.x = xl;
+                        rect.downRight.x = xr-1;
+                        rect.topLeft.y = line.topLeft.y;
+                        rect.downRight.y = line.downRight.y;
+                        DrawRect_hor(rect, image, 4);
+                        fputc('_', f);
+                    }
+
+                }
+                break;
+            }
+        }
+        if  (y == line.downRight.y)
+        {
+            if (active == 1)
+            {
+                active = 0;
+                charPos.downRight.x = x;
+                fputc('C', f);
+                DrawRect_ver(charPos, result, 3);
+                xl = x;
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+/*
+ * Renvoie les coordonnees du contenue de la page hormis les marges
  * param :
  *      image: image sur laquelle détécter les marges
  */
@@ -143,6 +285,7 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
             inrect.downRight.y = y;
             DrawRect_hor(inrect, result, 2);
             CutChar(image, inrect, result, f);
+            //CutChar2(image, inrect, result, f);
             fputc('\n', f);
         }
     }
@@ -157,46 +300,6 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
  *      f: fichier dans lequel ecrire le resultat de l'OCR
  */
 void CutChar(Image image, Rect line, Image result, FILE *f)
-{
-    int active = 0;
-    Rect charPos;
-    charPos.topLeft.y = line.topLeft.y;
-    charPos.downRight.y = line.downRight.y;
-    for (int x = line.topLeft.x; x < line.downRight.x; ++x)
-    {
-        int y = line.topLeft.y;
-        for (; y < line.downRight.y; ++y)
-        {
-            int pos = y * image.w + x;
-            if (image.data[pos] == 1 )
-            {
-                if  (active == 0)
-                {
-                    charPos.topLeft.x = ( x == 0 )? 0 : x-1;
-                    active = 1;
-                }
-                break;
-            }
-        }
-        if  (y == line.downRight.y && active == 1)
-        {
-            active = 0;
-            charPos.downRight.x = x;
-            fputc('C', f);
-            DrawRect_ver(charPos, result, 3);
-        }
-    }
-}
-
-/*
- * Applique le decoupage des caractere a l'image donne sur la zone rect
- * param :
- *      image: image sur laquelle lire les informations
- *      rect: coordonnées de la ligne sur laquelle faire le decoupage
- *      result: image sur laquelle appliquer le résultat
- *      f: fichier dans lequel ecrire le resultat de l'OCR
- */
-void CutCharV2(Image image, Rect line, Image result, FILE *f)
 {
     int active = 0;
     Rect charPos;
@@ -303,7 +406,6 @@ Image Parse_Image(Image image, int newImage)
     {
         result = CopyImage(image);
     }
-    // Rect border = CutBorder(image);
     Cord left;
     left.x = 0;
     left.y = 0;
@@ -313,6 +415,8 @@ Image Parse_Image(Image image, int newImage)
     Rect border;
     border.topLeft = left;
     border.downRight = right;
+
+    border = CutBorder(image);
 
     FILE *file = fopen("output.txt", "w+");
 
