@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "cut.h"
 
 /*
@@ -108,8 +107,9 @@ Image CopyImage(Image image)
  *      image: image sur laquelle lire les informations
  *      rect: coordonnées de la ligne sur laquelle faire le decoupage
  *      result: image sur laquelle appliquer le résultat
+ *      f: fichier dans lequel ecrire le resultat de l'OCR
  */
-void cutLine(Image image, Rect rect, Image result)
+void cutLine(Image image, Rect rect, Image result, FILE *f)
 {
     /*
     Image result;
@@ -142,7 +142,8 @@ void cutLine(Image image, Rect rect, Image result)
             active = 0;
             inrect.downRight.y = y;
             DrawRect_hor(inrect, result, 2);
-            CutChar(image, inrect, result);
+            CutChar(image, inrect, result, f);
+            fputc('\n', f);
         }
     }
 }
@@ -153,8 +154,9 @@ void cutLine(Image image, Rect rect, Image result)
  *      image: image sur laquelle lire les informations
  *      rect: coordonnées de la ligne sur laquelle faire le decoupage
  *      result: image sur laquelle appliquer le résultat
+ *      f: fichier dans lequel ecrire le resultat de l'OCR
  */
-void CutChar(Image image, Rect line, Image result)
+void CutChar(Image image, Rect line, Image result, FILE *f)
 {
     int active = 0;
     Rect charPos;
@@ -180,6 +182,47 @@ void CutChar(Image image, Rect line, Image result)
         {
             active = 0;
             charPos.downRight.x = x;
+            fputc('C', f);
+            DrawRect_ver(charPos, result, 3);
+        }
+    }
+}
+
+/*
+ * Applique le decoupage des caractere a l'image donne sur la zone rect
+ * param :
+ *      image: image sur laquelle lire les informations
+ *      rect: coordonnées de la ligne sur laquelle faire le decoupage
+ *      result: image sur laquelle appliquer le résultat
+ *      f: fichier dans lequel ecrire le resultat de l'OCR
+ */
+void CutCharV2(Image image, Rect line, Image result, FILE *f)
+{
+    int active = 0;
+    Rect charPos;
+    charPos.topLeft.y = line.topLeft.y;
+    charPos.downRight.y = line.downRight.y;
+    for (int x = line.topLeft.x; x < line.downRight.x; ++x)
+    {
+        int y = line.topLeft.y;
+        for (; y < line.downRight.y; ++y)
+        {
+            int pos = y * image.w + x;
+            if (image.data[pos] == 1 )
+            {
+                if  (active == 0)
+                {
+                    charPos.topLeft.x = ( x == 0 )? 0 : x-1;
+                    active = 1;
+                }
+                break;
+            }
+        }
+        if  (y == line.downRight.y && active == 1)
+        {
+            active = 0;
+            charPos.downRight.x = x;
+            fputc('C', f);
             DrawRect_ver(charPos, result, 3);
         }
     }
@@ -270,6 +313,17 @@ Image Parse_Image(Image image, int newImage)
     Rect border;
     border.topLeft = left;
     border.downRight = right;
-    cutLine(image, border, result);
+
+    FILE *file = fopen("output.txt", "w+");
+
+    if (file == NULL)
+    {
+        printf("Unexpected error when opening file !");
+    }
+
+    cutLine(image, border, result, file);
+
+    fclose(file);
+
     return result;
 }
