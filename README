@@ -1,0 +1,27 @@
+Project : Processing an image, extracting its text and write in under a more useful form
+
+S3 Project by SUP A1
+
+
+Command to compile : 	make
+
+
+
+				The project
+Command to launch : 	./OCR
+
+
+
+				Step by step
+
+Image Processing : 	Binarize the image to process
+
+
+
+Segmenting : 		Launch by clicking on the convert button
+			Draw lines 
+			Draw a rectangle around each letter
+	      
+
+
+Neural Network : 	
