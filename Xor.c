@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 		errx(1, "Invalid input.");
 
 	const size_t nbInput = strtoul(argv[1], NULL, 10);
-	const size_t nbHidden = nbInput + nbInput/2;
+	const size_t nbHidden = nbInput + 1;
 
 	//getting number of possible combinations
 	const size_t inputLen = 1<<nbInput;
