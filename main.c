@@ -94,9 +94,7 @@ void convert()
 	{
 		printf("File not found !\n filename=%s\n",filename);
 	}
-	//print_Array(image.data, image.w, image.h); //debug
 	Image cutted = cut(filename);
-	print_Array(cutted.data, cutted.w, cutted.h);
 	char n[]="converted.bmp";
 	array_to_bmp(cutted.data, cutted.w, cutted.h, filename, n);
 	gtk_image_set_from_file(GTK_IMAGE(image_glo), n);
