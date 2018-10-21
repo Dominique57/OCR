@@ -1,28 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <err.h>
 
-const size_t nbInput = 2;
-const size_t nbHidden = 3;
 const float eta = 0.9f;
-const size_t epochs = 10000;
+const size_t epochs = 15000;
 
 
 float Sigmoid(float x, int deriv)
 {
-  if (deriv == 1)
-  {
-    return x * (1.0f - x);
-  }
-    return 1.0f/(1.0f + exp(-x));
+	if (deriv == 1)
+		return x * (1.0f - x);
+	else
+    		return 1.0f/(1.0f + exp(-x));
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	//
 	// Initialization
 	//
 	
+
+	if (argc != 2)
+		errx(1, "Invalid input.");
+
+	const size_t nbInput = strtoul(argv[1], NULL, 10);
+	const size_t nbHidden = nbInput + nbInput/2;
 
 	//getting number of possible combinations
 	const size_t inputLen = 1<<nbInput;
