@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include "../type/image.h"
 
+// WORK IN PROJECT (does not work yet)
+// please ignore for now
+
+
 Image RLSA_v(Image image, int thresh)
 {
     Image result;
@@ -30,7 +34,7 @@ Image RLSA_v(Image image, int thresh)
                         result.data[pos2] = 1;
                     }
                     // TODO : set pixel black following this rule
-                    // output(Rect(i, j - count, 1, count)).setTo(Scalar::all(0));
+            // output(Rect(i, j - count, 1, count)).setTo(Scalar::all(0));
                 }
                 flag = 1;
                 count = 0;
@@ -68,7 +72,7 @@ Image RLSA_h(Image image, int thresh)
                         int pos2 = j * image.w + k;
                         result.data[pos2] = 1;
                     }
-                    // output(Rect(i - count, j, count, 1)).setTo(Scalar::all(0));
+            // output(Rect(i - count, j, count, 1)).setTo(Scalar::all(0));
                 }
                 flag = 1;
                 count = 0;
