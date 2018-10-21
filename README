@@ -4,6 +4,7 @@ S3 Project by SUP A1
 
 
 Command to compile : 	make
+Command to clean :	make clean
 
 
 
@@ -24,4 +25,7 @@ Segmenting : 		Launch by clicking on the convert button
 	      
 
 
-Neural Network : 	
+Neural Network :	Launch with ./Xor n, 1 <= n <= 2
+
+
+GUI :			Button to : choose a file, launch segmenting, exit	
