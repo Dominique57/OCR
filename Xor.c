@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
                 {
 			printf("Prediction for { ");
 			//print input values
-			for (size_t i = 0; i < nbInput; i++)		
+			for (size_t i = 0; i < nbInput; i++)
 				printf("%.0f ", inputs[input][i]);
 
                         //Forward propagation

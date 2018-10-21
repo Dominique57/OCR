@@ -16,7 +16,8 @@ GtkWidget *pathBtn;
 int toConvert=0;
 gchar *filename="icon.svg";
 
-void print_Array(unsigned char *array, size_t w, size_t h) //prints all values from an array
+void print_Array(unsigned char *array, size_t w, size_t h)
+	//prints all values from an array
 {
 	size_t k;
 	k=0;
@@ -85,7 +86,8 @@ void convert()
 	// not very optimized, feel free to optimize
 	image.h = getHeight(filename);
 	image.w = getWidth(filename);
-	unsigned char final_array[ image.h * image.w ]; //initialization of the pixel array
+	unsigned char final_array[ image.h * image.w ]; 
+	//initialization of the pixel array
 	image.data = final_array;
 
 	if (parse_bmp(final_array, filename)==1)
@@ -126,9 +128,10 @@ int main(int argc, char *argv[]) {
 	//init image choice
 	image_glo=gtk_image_new_from_file("icon.svg");
 	
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
 
 	//Creating buttons and adding them to the box
-	pathBtn = gtk_file_chooser_button_new (("Load image"),GTK_FILE_CHOOSER_ACTION_OPEN);
+	pathBtn = gtk_file_chooser_button_new (("Load image"),action);
 
 
 	GtkWidget* convertBtn = gtk_button_new_with_label ("Convert");
