@@ -6,6 +6,24 @@
 const float eta = 0.9f;
 const size_t epochs = 15000;
 
+typedef struct Network
+{
+	size_t nbInput;
+	size_t nbHidden;
+	size_t size;
+	float ws[];
+} Network;
+
+int FileExists(const char *fname)
+{
+    FILE *f;
+    if ((f=fopen(fname, "r")))
+    {
+        fclose(f);
+        return 1;
+    }
+    return 0;
+}
 
 float Sigmoid(float x, int deriv)
 {
@@ -15,6 +33,73 @@ float Sigmoid(float x, int deriv)
     		return 1.0f/(1.0f + exp(-x));
 }
 
+Network *CreateNetwork(size_t nbInput, size_t nbHidden, float w1[][nbHidden], float w2[])
+{
+	struct Network *network = malloc(sizeof(Network)+sizeof(float)*((nbInput+1)*nbHidden + nbHidden+1));
+	network->size=sizeof(Network)+sizeof(float)*((nbInput+1)*nbHidden + nbHidden+1);
+        network->nbInput=nbInput;
+        network->nbHidden=nbHidden;
+
+	size_t length=nbInput+1;
+	size_t k=0;
+	for (size_t i=0; i<length; i++)
+	{
+		for (size_t j=0; j<nbHidden; j++)
+		{
+			network->ws[k]=w1[i][j];
+			k++;
+		}
+	}
+	length=nbHidden+1;
+	for (size_t i=0; i<length; i++)
+	{
+		network->ws[k]=w2[i];
+		k++;
+	}
+
+	return network;
+}
+
+int SaveNetwork(Network *network)
+{
+	char *fname="NetSave";
+	if(FileExists(fname)) //check if file exists
+	{
+		rename(fname, "NetSave.bak"); //backup previous network
+	}
+	FILE *f = fopen(fname, "wb");
+	if (f!=NULL)
+	{
+		fwrite(network, network->size, 1, f); //save new network
+		fclose(f);
+		return 0;
+	}
+	return 1;
+}
+
+Network *LoadNetwork(char *fname, const size_t nbInput, const size_t nbHidden)
+{
+	Network *network = malloc(sizeof(struct Network)+sizeof(float)*((nbInput+1)*nbHidden + nbHidden+1));
+	FILE *f = fopen(fname, "rb");
+	if (f!=NULL)
+	{
+		fread(network, sizeof(Network), 1, f); //get previous network dimensions
+		fread(network->ws, network->size, 1, f); //now we can get the array
+	}
+	//
+	//[DEBUG] Print loaded array
+	//
+	/*
+	size_t len=(network->nbInput+1) * network->nbHidden + network->nbHidden + 1;
+	for (size_t i=0; i<len; i++)
+	{
+		printf("array[%ld]=%f\n", i, network->ws[i]);
+	}
+	*/
+
+	return network;
+}
+
 int main(int argc, char *argv[])
 {
 	//
@@ -22,8 +107,10 @@ int main(int argc, char *argv[])
 	//
 	
 
-	if (argc != 2)
+	if (argc <2 || argc>3)
+	{
 		errx(1, "Invalid input.");
+	}
 
 	const size_t nbInput = strtoul(argv[1], NULL, 10);
 	const size_t nbHidden = nbInput;
@@ -34,6 +121,17 @@ int main(int argc, char *argv[])
 	//generate every possible inputs
 	float inputs[inputLen][nbInput];
 	float targets[inputLen];
+
+	if (argc==3) //Load previous network
+        {
+                char *fname=argv[2];
+                if (!FileExists(fname))
+                {
+                        errx(1, "file \"%s\" does not exist.", fname);
+                }
+                Network *network=LoadNetwork(fname, nbInput, nbHidden);
+
+        }
 	
 	for (size_t i = 0; i < inputLen; i++)
 	{	
@@ -125,7 +223,7 @@ int main(int argc, char *argv[])
         			w2[j] -= deltaw2 * eta;
 			}
 			//Update hidden bias
-			w2[nbHidden] -=  eta * (output - targets[input]) * Sigmoid(output, 1); 
+			w2[nbHidden] -=  eta * (output - targets[input]) * Sigmoid(output, 1);
 		}
 	}
 
@@ -133,6 +231,25 @@ int main(int argc, char *argv[])
 	//
 	// Testing
 	//
+	
+
+
+	Network *network=CreateNetwork(nbInput, nbHidden, w1, w2);
+
+	if (SaveNetwork(network))
+	{
+		printf("error saving network\n");
+	}
+	//[DEBUG] print created network
+	/*
+	
+	size_t len=(network->nbInput+1) * network->nbHidden + network->nbHidden + 1;
+	for (size_t i = 0; i<len; i++)
+	{
+		printf("array[%ld]=%f\n",i,network->ws[i]);
+	}
+	*/
+
 
 	for (size_t input = 0; input < inputLen; input++)
                 {
@@ -162,4 +279,24 @@ int main(int argc, char *argv[])
 			printf("} : %f\n", output);
 			
 		}
+
+	//[DEBUG] print w1 and w2
+	/*
+	for (size_t i=0; i<nbInput+1; i++)
+	{
+		for (size_t j=0; j<nbHidden; j++)
+		{
+			printf("w1[%ld][%ld]=%f\n", i, j, w1[i][j]);
+		}
+	}
+	for (size_t i=0; i<nbHidden+1; i++)
+	{
+		printf("w2[%ld]=%f\n", i, w2[i]);
+	}
+	*/
+
+
+
+
+	free(network);
 }
