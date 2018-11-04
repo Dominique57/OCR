@@ -86,6 +86,7 @@ Network *LoadNetwork(char *fname, const size_t nbInput, const size_t nbHidden)
 		fread(network, sizeof(Network), 1, f); //get previous network dimensions
 		fread(network->ws, network->size, 1, f); //now we can get the array
 	}
+	fclose(f);
 	//
 	//[DEBUG] Print loaded array
 	//
