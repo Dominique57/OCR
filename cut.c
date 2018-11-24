@@ -19,9 +19,9 @@ int GetLineThresold(Image image, Rect line)
     // go to first col with black pixels
     int keep = 1;
     int x = line.topLeft.x;
-    for (; x < line.downRight.x && keep; ++x)
+    for (; x <= line.downRight.x && keep; ++x)
     {
-        for (int y = line.topLeft.y; y < line.downRight.y; ++y)
+        for (int y = line.topLeft.y; y <= line.downRight.y; ++y)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
@@ -45,10 +45,10 @@ int GetLineThresold(Image image, Rect line)
 
     // first line with black piexls,
     // count every space and length till no black pixels no more
-    for (; x < line.downRight.x; ++x)
+    for (; x <= line.downRight.x; ++x)
     {
         int y = line.topLeft.y;
-        for (; y < line.downRight.y; ++y)
+        for (; y <= line.downRight.y; ++y)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
@@ -69,7 +69,7 @@ int GetLineThresold(Image image, Rect line)
             }
 
         }
-        if  (y == line.downRight.y)
+        if  (y > line.downRight.y)
         {
             if (active == 0)
             {
@@ -125,7 +125,7 @@ Rect CutBorder(Image image)
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
             {
-                rect.downRight.x = x + 1;
+                rect.downRight.x = x;
                 keep = 0;
             }
         }
@@ -153,7 +153,7 @@ Rect CutBorder(Image image)
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
             {
-                rect.downRight.y = y + 1;
+                rect.downRight.y = y;
                 keep = 0;
             }
         }
@@ -207,10 +207,10 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
     inrect.topLeft.x = rect.topLeft.x;
     inrect.downRight.x = rect.downRight.x;
 	int y = rect.topLeft.y;
-    for (; y < rect.downRight.y; ++y)
+    for (; y <= rect.downRight.y; ++y)
     {
         int x = rect.topLeft.x;
-        for (; x < rect.downRight.x; ++x)
+        for (; x <= rect.downRight.x; ++x)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
@@ -223,10 +223,10 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
                 break;
             }
         }
-        if (x == rect.downRight.x && active == 1)
+        if (x > rect.downRight.x && active == 1)
         {
             active = 0;
-            inrect.downRight.y = y - 1;
+            inrect.downRight.y = y - 1; // downright est exclus donc pas y-1
             DrawRect_hor(inrect, result, 2);
             CutChar2(image, inrect, result, f);
             fputc('\n', f);
@@ -257,10 +257,10 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
     charPos.topLeft.y = line.topLeft.y;
     charPos.downRight.y = line.downRight.y;
     int x = line.topLeft.x;
-    for (; x < line.downRight.x; ++x)
+    for (; x <= line.downRight.x; ++x)
     {
         int y = line.topLeft.y;
-        for (; y < line.downRight.y; ++y)
+        for (; y <= line.downRight.y; ++y)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1 )
@@ -273,10 +273,10 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
                 break;
             }
         }
-        if  (y == line.downRight.y && active == 1)
+        if  (y > line.downRight.y && active == 1)
         {
             active = 0;
-            charPos.downRight.x = x - 1;
+            charPos.downRight.x = x;
             fputc('C', f);
             DrawRect_ver(charPos, result, 3);
         }
@@ -312,10 +312,10 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
     charPos.topLeft.y = line.topLeft.y;
     charPos.downRight.y = line.downRight.y;
     int x = line.topLeft.x;
-    for (; x < line.downRight.x; ++x)
+    for (; x <= line.downRight.x; ++x)
     {
         int y = line.topLeft.y;
-        for (; y < line.downRight.y; ++y)
+        for (; y <= line.downRight.y; ++y)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1 )
@@ -341,7 +341,7 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
                 break;
             }
         }
-        if  (y == line.downRight.y)
+        if  (y > line.downRight.y)
         {
             if (active == 1)
             {
