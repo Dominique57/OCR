@@ -19,9 +19,9 @@ int GetLineThresold(Image image, Rect line)
     // go to first col with black pixels
     int keep = 1;
     int x = line.topLeft.x;
-    for (; x < line.downRight.x && keep; ++x)
+    for (; x <= line.downRight.x && keep; ++x)
     {
-        for (int y = line.topLeft.y; y < line.downRight.y; ++y)
+        for (int y = line.topLeft.y; y <= line.downRight.y; ++y)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
@@ -45,10 +45,10 @@ int GetLineThresold(Image image, Rect line)
 
     // first line with black piexls,
     // count every space and length till no black pixels no more
-    for (; x < line.downRight.x; ++x)
+    for (; x <= line.downRight.x; ++x)
     {
         int y = line.topLeft.y;
-        for (; y < line.downRight.y; ++y)
+        for (; y <= line.downRight.y; ++y)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
@@ -69,7 +69,7 @@ int GetLineThresold(Image image, Rect line)
             }
 
         }
-        if  (y == line.downRight.y)
+        if  (y > line.downRight.y)
         {
             if (active == 0)
             {
@@ -276,7 +276,7 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
         if  (y > line.downRight.y && active == 1)
         {
             active = 0;
-            charPos.downRight.x = x - 1;
+            charPos.downRight.x = x;
             fputc('C', f);
             DrawRect_ver(charPos, result, 3);
         }
