@@ -5,6 +5,8 @@
 #include "cut.h"
 
 
+#include "cut.h"
+
 
 /*
  * determines the average space between caracters of a line
@@ -82,71 +84,6 @@ int GetLineThresold(Image image, Rect line)
 }
 
 /*
- * Applies caracter cut of the image in the line specified bu rect
- * AND calculates linethresold to estimate average space and detect spaces
- * Also writes in FILE f the position of detected caracters and spaces too
- * param :
- *      image: image where informations will be read
- *      rect: rectangle around the line
- *      result: image where graphical result will be saved
- *      f: file in which OCR result will be written
- */
-void CutChar2(Image image, Rect line, Image result, FILE *f)
-{
-    int thresold = GetLineThresold(image, line);
-    // activation function (linear)
-    thresold = 1.5 * thresold;
-
-    int xl = 0, xr = 0;
-
-    int active = 0;
-    Rect charPos;
-    charPos.topLeft.y = line.topLeft.y;
-    charPos.downRight.y = line.downRight.y;
-    for (int x = line.topLeft.x; x < line.downRight.x; ++x)
-    {
-        int y = line.topLeft.y;
-        for (; y < line.downRight.y; ++y)
-        {
-            int pos = y * image.w + x;
-            if (image.data[pos] == 1 )
-            {
-                if  (active == 0)
-                {
-                    charPos.topLeft.x = ( x == 0 )? 0 : x-1;
-                    active = 1;
-                    // compated computed space to thresold
-                    xr = x;
-                    if (xr - xl > thresold)
-                    {
-                        Rect rect;
-                        rect.topLeft.x = xl;
-                        rect.downRight.x = xr-1;
-                        rect.topLeft.y = line.topLeft.y;
-                        rect.downRight.y = line.downRight.y;
-                        DrawRect_hor(rect, image, 4);
-                        fputc('_', f);
-                    }
-
-                }
-                break;
-            }
-        }
-        if  (y == line.downRight.y)
-        {
-            if (active == 1)
-            {
-                active = 0;
-                charPos.downRight.x = x;
-                fputc('C', f);
-                DrawRect_ver(charPos, result, 3);
-                xl = x;
-            }
-        }
-    }
-}
-
-/*
  * Sends a rect of the image without white borders (no need to save them)
  * param :
  *      image: image where informations will be read
@@ -221,7 +158,8 @@ Rect CutBorder(Image image)
             }
         }
     }
-    DrawRect(rect, image, 4, 4);
+    // showing the cutted border
+    // DrawRect(rect, image, 2, 2);
     return rect;
 }
 
@@ -235,7 +173,8 @@ Image CopyImage(Image image)
     Image result;
     result.w = image.w;
     result.h = image.h;
-    unsigned char data[ result.w * result.h ];
+    //unsigned char data[ result.w * result.h ];
+    unsigned char *data = malloc((image.h * image.w) * sizeof(unsigned char));
     result.data = data;
 
     int max = result.w * result.h;
@@ -267,7 +206,8 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
     Rect inrect;
     inrect.topLeft.x = rect.topLeft.x;
     inrect.downRight.x = rect.downRight.x;
-    for (int y = rect.topLeft.y; y < rect.downRight.y; ++y)
+	int y = rect.topLeft.y;
+    for (; y < rect.downRight.y; ++y)
     {
         int x = rect.topLeft.x;
         for (; x < rect.downRight.x; ++x)
@@ -277,7 +217,7 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
             {
                 if (active == 0)
                 {
-                    inrect.topLeft.y = ( y == 0 )? 0 : y-1;
+                    inrect.topLeft.y = y;
                     active = 1;
                 }
                 break;
@@ -286,13 +226,19 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
         if (x == rect.downRight.x && active == 1)
         {
             active = 0;
-            inrect.downRight.y = y;
+            inrect.downRight.y = y - 1;
             DrawRect_hor(inrect, result, 2);
-            // CutChar(image, inrect, result, f);
             CutChar2(image, inrect, result, f);
             fputc('\n', f);
         }
     }
+	if(active)
+	{
+		inrect.downRight.y = y - 1;
+		DrawRect_hor(inrect, result, 2);
+		CutChar2(image, inrect, result, f);
+		fputc('\n', f);
+	}
 }
 
 /*
@@ -310,7 +256,8 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
     Rect charPos;
     charPos.topLeft.y = line.topLeft.y;
     charPos.downRight.y = line.downRight.y;
-    for (int x = line.topLeft.x; x < line.downRight.x; ++x)
+    int x = line.topLeft.x;
+    for (; x < line.downRight.x; ++x)
     {
         int y = line.topLeft.y;
         for (; y < line.downRight.y; ++y)
@@ -320,7 +267,7 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
             {
                 if  (active == 0)
                 {
-                    charPos.topLeft.x = ( x == 0 )? 0 : x-1;
+                    charPos.topLeft.x = x;
                     active = 1;
                 }
                 break;
@@ -329,10 +276,88 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
         if  (y == line.downRight.y && active == 1)
         {
             active = 0;
-            charPos.downRight.x = x;
+            charPos.downRight.x = x - 1;
             fputc('C', f);
             DrawRect_ver(charPos, result, 3);
         }
+    }
+    if(active)
+    {
+        charPos.downRight.x = x - 1;
+        fputc('C', f);
+        DrawRect_ver(charPos, result, 3);
+    }
+}
+
+/*
+ * Applies caracter cut of the image in the line specified bu rect
+ * AND calculates linethresold to estimate average space and detect spaces
+ * Also writes in FILE f the position of detected caracters and spaces too
+ * param :
+ *      image: image where informations will be read
+ *      rect: rectangle around the line
+ *      result: image where graphical result will be saved
+ *      f: file in which OCR result will be written
+ */
+void CutChar2(Image image, Rect line, Image result, FILE *f)
+{
+    int thresold = GetLineThresold(image, line);
+    // activation function (linear)
+    thresold = 1.5 * thresold;
+
+    int xl = line.topLeft.x, xr = line.topLeft.x;
+
+    int active = 0;
+    Rect charPos;
+    charPos.topLeft.y = line.topLeft.y;
+    charPos.downRight.y = line.downRight.y;
+    int x = line.topLeft.x;
+    for (; x < line.downRight.x; ++x)
+    {
+        int y = line.topLeft.y;
+        for (; y < line.downRight.y; ++y)
+        {
+            int pos = y * image.w + x;
+            if (image.data[pos] == 1 )
+            {
+                if  (active == 0)
+                {
+                    charPos.topLeft.x = x;
+                    active = 1;
+                    // compared computed space to thresold
+                    xr = x;
+                    if (xr - xl > thresold)
+                    {
+                        Rect rect;
+                        rect.topLeft.x = xl;
+                        rect.downRight.x = xr-1;
+                        rect.topLeft.y = line.topLeft.y;
+                        rect.downRight.y = line.downRight.y;
+                        DrawRect_hor(rect, image, 4);
+                        fputc('_', f);
+                    }
+
+                }
+                break;
+            }
+        }
+        if  (y == line.downRight.y)
+        {
+            if (active == 1)
+            {
+                active = 0;
+                charPos.downRight.x = x - 1;
+                fputc('C', f);
+                DrawRect_ver(charPos, result, 3);
+                xl = x;
+            }
+        }
+    }
+    if(active)
+    {
+        charPos.downRight.x = x - 1;
+        fputc('C', f);
+        DrawRect_ver(charPos, result, 3);
     }
 }
 
@@ -420,7 +445,7 @@ Image Parse_Image(Image image, int newImage)
     border.topLeft = left;
     border.downRight = right;
 
-    // border = CutBorder(image);
+    border = CutBorder(image);
 
     FILE *file = fopen("output.txt", "w+");
 
@@ -436,17 +461,12 @@ Image Parse_Image(Image image, int newImage)
     return result;
 }
 
-/*###################################### former cut main ##########################################*/
-
-
 Image cut(char *path)
 {
     Image image1;
     load_image(path, &image1);
     Image result = image1;
     result = Parse_Image(image1, 0);
-
-    
 
     return result;
 }

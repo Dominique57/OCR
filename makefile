@@ -26,4 +26,4 @@ Xor: Xor.c
 clean:
 	rm *.o;
 	rm OCR;
-	rm Xor
+	rm Xor;

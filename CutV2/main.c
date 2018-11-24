@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include "../Bmp_Parser.h"
 #include "../type/image.h"
 #include "cut.h"
+//gcc -Wall -Wextra -std=c99 -lSDL2 -lSDL2_image -o main *.c
 
 //prints all values from an array
 void print_Array(unsigned char *array, size_t w, size_t h)
