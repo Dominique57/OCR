@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-const float eta = 0.5f;
+const float eta = 0.025f;
 const size_t epochs = 15000;
 
 //Defining layers
@@ -46,8 +46,9 @@ float Softmax(float x[], float out[])
 {
 	float sum = 0;
 	for (size_t i = 0; i < nbOutput; i++)
+	{
 		sum += x[i];
-
+	}
 	for (size_t i = 0; i < nbOutput; i++) {
 		out[i] = x[i]/sum;
 	}
@@ -167,6 +168,7 @@ char Prediction(unsigned char m[], float w1[], float w2[], unsigned letter)
 	//Forward propagation
 	float sum;
 	float outh[nbHidden];
+	float totalOutSum[nbOutput];
 	float outexp[nbOutput];
 	float output[nbOutput];
 
@@ -188,9 +190,20 @@ char Prediction(unsigned char m[], float w1[], float w2[], unsigned letter)
 		for (size_t j = 0; j < nbHidden; j++) {
 			sum += outh[j] * w2[i * nbHidden + j];
 		}
-
-		outexp[i] = exp(sum);
+		totalOutSum[i] = sum;
 	}
+
+	//Get max value for sigmoid
+	float max = 0;
+	for (size_t i = 0; i < nbOutput; i++)
+	{
+		if (max < totalOutSum[i])
+			max = totalOutSum[i];
+	}
+	for (size_t i = 0; i < nbOutput; i++) {
+		outexp[i] = exp(totalOutSum[i] - max);
+	}
+
 	//applies the Softmax to the output and returns de sum of exponentials
 	float expSum = Softmax(outexp, output);
 
@@ -203,6 +216,7 @@ char Prediction(unsigned char m[], float w1[], float w2[], unsigned letter)
 		float target[nbOutput];
 		ConvertChar(letter, target);
 		Backpropagation(m, w1, w2, output, target, outh, expSum, outexp);
+		return Interpret(output);
 	}
 }
 
@@ -220,11 +234,11 @@ int main()
 	float w1[totalW1];
 	float w2[nbHidden+1];
 
-  for (size_t i = 0; i <= totalW1; i++)
-    w1[i] = 2.0f*rand()/RAND_MAX - 1;
+	for (size_t i = 0; i <= totalW1; i++)
+		w1[i] = 2.0f*rand()/RAND_MAX - 1;
 
 	for (size_t i = 0; i < totalW2; i++)
-	  w2[i] = 2.0f*rand()/RAND_MAX - 1;
+		w2[i] = 2.0f*rand()/RAND_MAX - 1;
 
 	//
 	// Testing
@@ -234,8 +248,8 @@ int main()
 		m[i] = 1;
 	}
 
-	printf("%c", Prediction(m, w1, w2, 'a'));
-
+	for (size_t i = 0; i < 10000; i++)
+		printf("%c\n", Prediction(m, w1, w2, '?'));
 	/*
 	Network *network=CreateNetwork(nbInput, nbHidden, w1, w2);
 	if (SaveNetwork(network))
