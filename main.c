@@ -5,6 +5,7 @@
 #include "type/image.h"
 #include "RLSA/RLSA.h"
 #include "cut.h"
+#include "resize.h"
 
 //gcc `pkg-config gtk+-3.0 --cflags` *.c -o `pkg-config gtk+-3.0 --libs`
 
@@ -21,9 +22,9 @@ void print_Array(unsigned char *array, size_t w, size_t h)
 {
 	size_t k;
 	k=0;
-	for(size_t i=0; i<w; i++)
+	for(size_t i=0; i<h; i++)
 	{
-			for (size_t j=0; j<h; j++)
+			for (size_t j=0; j<w; j++)
 			{
 				printf("%d|",array[k]);
 				k++;
@@ -54,8 +55,46 @@ void print_image(Image im) //prints all values from an array
     }
 }
 
+/*
+int test_resize()
+{
+        Image image;
+        unsigned char *filename="dataset/square10.bmp";
+        // not very optimized, feel free to optimize
+        image.h = getHeight(filename);
+        image.w = getWidth(filename);
+        unsigned char final_array[ image.h * image.w ];
+        //initialization of the pixel array
+        image.data = final_array;
+
+        if (parse_bmp(final_array, filename)==1)
+        {
+                printf("File not found !\n filename=%s\n",filename);
+        }
+		print_Array(final_array, image.w, image.h);
+        Rect rect;
+        Cord topleft;
+        Cord downright;
+		topleft.x=0;
+        topleft.y=0;
+        downright.x=image.w-1;
+        downright.y=image.h-1;
+		rect.topLeft=topleft;
+		rect.downRight=downright;
+        size_t maxlen=image.w;
+		if (image.h>image.w)
+		{
+			maxlen=image.h;
+		}
+		unsigned char toRet[256];
+		resize(image, rect, toRet);
+		//print_Array(toRet, 16, 16);
+		return 0;
+}
+*/
+
 Image tryRLSA(char *path)
-{	
+{
 	Image image;
 	image.w = getWidth(path);
 	image.h = getHeight(path);
@@ -102,6 +141,7 @@ void convert()
 }
 
 int main(int argc, char *argv[]) {
+
 
 	//Init window itself
 	GtkWidget *window;
