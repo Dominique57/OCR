@@ -31,6 +31,7 @@ struct Pixel get_color(SDL_Surface *image, int x, int y)
 }
 
 //puts all pixels from a surface in supplied array
+/*
 int get_color_array(SDL_Surface *image, size_t w, size_t h, unsigned char *arr)
 {
     struct Pixel pix;
@@ -51,8 +52,8 @@ int get_color_array(SDL_Surface *image, size_t w, size_t h, unsigned char *arr)
     }
     return 0;
 }
+*/
 
-/*
 int get_color_array_otsu
  (SDL_Surface *image, size_t w, size_t h, unsigned char *final_array)
 {
@@ -86,7 +87,6 @@ int get_color_array_otsu
     }
     return 0;
 }
-*/
 
 size_t getWidth(char path[])
 {
@@ -125,7 +125,7 @@ int parse_bmp(unsigned char *final_array, char path[])
     size_t h=image->h; //height of the image
 
     //fills the pixel array with all the pixels of the image
-    get_color_array(image, w, h, final_array);
+    get_color_array_otsu(image, w, h, final_array);
 
     SDL_FreeSurface(image); //cleanup
     return 0;
