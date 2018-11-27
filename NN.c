@@ -3,15 +3,13 @@
 #include <math.h>
 
 const float eta = 0.025f;
-const size_t epochs = 15000;
 
 //Defining layers
 const size_t nbInput = 256;
 const size_t nbHidden = 256;
-const size_t nbOutput = 72;
-const char train = 1;
 
 //Possible outputs
+const size_t nbOutput = 72;
 const char chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789";
 
 //Export/import
@@ -138,7 +136,6 @@ void ConvertChar(char letter, float target[])
 	}
 }
 
-//Backpropagation
 void Backpropagation(unsigned char m[], float w1[], float w2[], float output[], float target[], float outh[], float sumExp, float outexp[])
 {
 	for (size_t i = 0; i < nbOutput; i++) {
@@ -163,7 +160,7 @@ void Backpropagation(unsigned char m[], float w1[], float w2[], float output[], 
 	}
 }
 
-char Prediction(unsigned char m[], float w1[], float w2[], unsigned letter)
+char Prediction(unsigned char m[], float w1[], float w2[], unsigned char letter)
 {
 	//Forward propagation
 	float sum;
@@ -207,7 +204,7 @@ char Prediction(unsigned char m[], float w1[], float w2[], unsigned letter)
 	//applies the Softmax to the output and returns de sum of exponentials
 	float expSum = Softmax(outexp, output);
 
-	if (!train)
+	if (letter == 0)
 	{
 		return Interpret(output);
 	}
@@ -220,25 +217,40 @@ char Prediction(unsigned char m[], float w1[], float w2[], unsigned letter)
 	}
 }
 
+//Initialization
+void Initialization(float w1[], float w2[], unsigned char import)
+{
+	//nbInputs weights per nbHidden + nbHidden biases
+	const size_t totalW1 = nbInput * nbHidden + nbHidden;
+	const size_t totalW2 = nbHidden * nbOutput + nbOutput;
 
-int main()
+	if (import == 0)
+	{
+		//Creating random weights
+		for (size_t i = 0; i <= totalW1; i++)
+			w1[i] = 2.0f*rand()/RAND_MAX - 1;
+
+		for (size_t i = 0; i < totalW2; i++)
+			w2[i] = 2.0f*rand()/RAND_MAX - 1;
+	}
+	else
+	{
+		/*
+		importer les poids depuis le fichier et les mettre dans w1 et w2,
+		la taille est specifie plus haut
+		a toi de jouer simon
+		*/
+	}
+}
+
+int test()
 {
 	//
 	// Initialization
 	//
-
-	//Creating random weights
-	//nbInputs weights per nbHidden + nbHidden biases
-	const size_t totalW1 = nbInput * nbHidden + nbHidden;
-	const size_t totalW2 = nbHidden * nbOutput + nbOutput;
-	float w1[totalW1];
-	float w2[nbHidden+1];
-
-	for (size_t i = 0; i <= totalW1; i++)
-		w1[i] = 2.0f*rand()/RAND_MAX - 1;
-
-	for (size_t i = 0; i < totalW2; i++)
-		w2[i] = 2.0f*rand()/RAND_MAX - 1;
+	float w1[nbInput * nbHidden + nbHidden];
+	float w2[nbHidden * nbOutput + nbOutput];
+	Initialization(w1, w2, 0);
 
 	//
 	// Testing

@@ -2,8 +2,8 @@ CFLAGS = -Wall -Wextra -std=c99
 
 all: OCR
 
-OCR: main.o Bmp_Parser.o RLSA.o cut.o resize.o Xor
-	gcc `pkg-config --cflags gtk+-3.0` *.o -o OCR `pkg-config --libs gtk+-3.0 ` -lSDL2 -lSDL2_image
+OCR: main.o Bmp_Parser.o RLSA.o cut.o resize.o NN.o
+	gcc `pkg-config --cflags gtk+-3.0` *.o -o OCR `pkg-config --libs gtk+-3.0 ` -lm -lSDL2 -lSDL2_image
 
 main.o: main.c
 	gcc -c main.c `pkg-config --cflags --libs gtk+-3.0`
@@ -23,10 +23,9 @@ cut.o: cut.c
 resize.o: resize.c
 	gcc -c resize.c
 
-Xor: Xor.c
-	gcc Xor.c -o Xor -lm
+NN.o: NN.c
+	gcc -O3 -c NN.c
 
 clean:
 	rm *.o;
 	rm OCR;
-	rm Xor;
