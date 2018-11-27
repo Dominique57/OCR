@@ -2,15 +2,23 @@
 #include <stdlib.h>
 #include <math.h>
 
-const float eta = 0.025f;
-
 //Defining layers
-const size_t nbInput = 256;
-const size_t nbHidden = 256;
+#define nbInput 256
+#define nbHidden 256
 
 //Possible outputs
-const size_t nbOutput = 72;
+#define nbOutput 72
+
+const float eta = 0.025f;
+
 const char chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789";
+
+//Export/import
+typedef struct Network
+{
+        float ws[nbInput*nbHidden*nbOutput];
+
+} Network;
 
 int FileExists(const char *fname)
 {
@@ -49,37 +57,34 @@ float SoftmaxDeriv(float x, float sum)
 	return (sum - x) * x / sum * sum;
 }
 
-/*
-Network *CreateNetwork(size_t nbInput, size_t nbHidden, float w1[][nbHidden], float w2[])
-{
-	struct Network *network = malloc(sizeof(Network)+sizeof(float)*((nbInput+1)*nbHidden + nbHidden+1));
-	network->size=sizeof(Network)+sizeof(float)*((nbInput+1)*nbHidden + nbHidden+1);
-        network->nbInput=nbInput;
-        network->nbHidden=nbHidden;
 
-	size_t length=nbInput+1;
-	size_t k=0;
-	for (size_t i=0; i<length; i++)
-	{
-		for (size_t j=0; j<nbHidden; j++)
-		{
-			network->ws[k]=w1[i][j];
-			k++;
-		}
-	}
-	length=nbHidden+1;
-	for (size_t i=0; i<length; i++)
+Network *CreateNetwork(float w1[], float w2[])
+{
+	size_t totalW1 = nbInput * nbHidden + nbHidden;
+	size_t totalW2 = nbHidden * nbOutput + nbOutput;
+	size_t maxLen=totalW1+totalW2;
+
+	Network *network=malloc(sizeof(Network));
+    
+	size_t k=totalW1;
+
+	for (size_t i=0; i<=totalW1; i++)
+		network->ws[i]=w1[i];
+
+	for (size_t i=0; i< totalW2; i++)
 	{
 		network->ws[k]=w2[i];
 		k++;
 	}
 
+
 	return network;
 }
 
-int SaveNetwork(Network *network)
+int SaveNetwork(float w1[], float w2[])
 {
 	char *fname="NetSave";
+	Network *network=CreateNetwork(w1, w2);
 	if(FileExists(fname)) //check if file exists
 	{
 		rename(fname, "NetSave.bak"); //backup previous network
@@ -87,28 +92,32 @@ int SaveNetwork(Network *network)
 	FILE *f = fopen(fname, "wb");
 	if (f!=NULL)
 	{
-		fwrite(network, network->size, 1, f); //save new network
+		fwrite(network, sizeof(Network), 1, f); //save new network
 		fclose(f);
+		free(network);
 		return 0;
 	}
+	free(network);
 	return 1;
 }
 
-Network *LoadNetwork(char *fname, const size_t nbInput, const size_t nbHidden)
+
+Network *LoadNetwork(char *fname)
 {
-	Network *network = malloc(sizeof(struct Network)+sizeof(float)*((nbInput+1)*nbHidden + nbHidden+1));
+	Network *network=malloc(sizeof(Network));
+
 	FILE *f = fopen(fname, "rb");
 	if (f!=NULL)
 	{
-		fread(network, sizeof(Network), 1, f); //get previous network dimensions
-		fread(network->ws, network->size, 1, f); //now we can get the array
+		if(fread(network, sizeof(Network), 1, f)!=1)
+			   printf("Error reading file, not a network ?");
 	}
 	fclose(f);
 
 
 	return network;
 }
-*/
+
 
 char Interpret(float output[])
 {
@@ -218,7 +227,7 @@ void Initialization(float w1[], float w2[], unsigned char import)
 	if (import == 0)
 	{
 		//Creating random weights
-		for (size_t i = 0; i <= totalW1; i++)
+		for (size_t i = 0; i < totalW1; i++)
 			w1[i] = 2.0f*rand()/RAND_MAX - 1;
 
 		for (size_t i = 0; i < totalW2; i++)
@@ -226,13 +235,21 @@ void Initialization(float w1[], float w2[], unsigned char import)
 	}
 	else
 	{
-		/*
-		importer les poids depuis le fichier et les mettre dans w1 et w2,
-		la taille est specifie plus haut
-		a toi de jouer simon
-		*/
+		Network *network=LoadNetwork("NetSave");
+		for (size_t i=0; i< totalW1; i++)
+			w1[i]=network->ws[i];
+
+		size_t k=totalW1;
+		for (size_t i = 0; i<totalW2; i++)
+		{
+			w2[i]=network->ws[k];
+			k++;
+		}
+
+		free(network);
 	}
 }
+
 
 int test()
 {
@@ -241,21 +258,35 @@ int test()
 	//
 	float w1[nbInput * nbHidden + nbHidden];
 	float w2[nbHidden * nbOutput + nbOutput];
-	Initialization(w1, w2, 0);
+	Initialization(w1, w2, 1);
 
 	//
 	// Testing
-	//
+	/*
+	
 	unsigned char m[16*16];
 	for (size_t i = 0; i < 256; i++) {
 		m[i] = 1;
 	}
 
 	for (size_t i = 0; i < 10000; i++)
-		printf("%c\n", Prediction(m, w1, w2, '?'));
+		Prediction(m, w1, w2, '?');
+	*/
+	
+
+	printf("w1[5]=%f", w1[5]);
+	printf(", w2[5]=%f\n", w2[5]);
+	
+	//
+	//TEST SAVE
 	/*
-	Network *network=CreateNetwork(nbInput, nbHidden, w1, w2);
-	if (SaveNetwork(network))
+	Network *network=CreateNetwork(w1, w2);
+	printf("w1[5]=%f, w2[5]=%f\n", network->ws[5], network->ws[(nbInput+1)*nbHidden+5]);
+	if (SaveNetwork(w1, w2))
+	{
 		printf("error saving network\n");
-	free(network);*/
+		return 1;
+	}
+	*/
+	return 0;
 }
