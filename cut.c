@@ -4,6 +4,7 @@
 #include "type/image.h"
 #include "type/cut.h"
 #include "resize.h"
+#include "NN.h"
 
 
 
@@ -346,7 +347,7 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
             {
                 active = 0;
                 charPos.downRight.x = x - 1;
-                CaracterProcessing(image, charPos, f);
+                CharProcess(image, charPos, f);
                 DrawRect_ver(charPos, result, 3);
                 xl = x;
             }
@@ -355,14 +356,14 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
     if(active)
     {
         charPos.downRight.x = x - 1;
-        CaracterProcessing(image, charPos, f);
+        CharProcess(image, charPos, f);
         DrawRect_ver(charPos, result, 3);
     }
 }
 
 
 
-void CaracterProcessing(Image image, Rect rect, FILE *f)
+void CharProcess(Image image, Rect rect, FILE *f)
 {
 	// check if multiple caracters in the same rect
 	unsigned char resized[256];

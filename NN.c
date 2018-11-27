@@ -12,15 +12,6 @@ const size_t nbHidden = 256;
 const size_t nbOutput = 72;
 const char chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789";
 
-//Export/import
-typedef struct Network
-{
-	size_t nbInput;
-	size_t nbHidden;
-	size_t size;
-	float ws[];
-} Network;
-
 int FileExists(const char *fname)
 {
   FILE *f;

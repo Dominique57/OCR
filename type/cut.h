@@ -9,7 +9,7 @@ Image CopyImage(Image image);
 void cutLine(Image image, Rect rect, Image result, FILE *f);
 void CutChar(Image image, Rect line, Image result, FILE *f);
 void CutCharV2(Image image, Rect line, Image result, FILE *f);
-void CaracterProcessing(Image image, Rect rect, FILE *f);
+void CharProcess(Image image, Rect rect, FILE *f);
 void DrawRect(Rect rect, Image image, int hor_val, int ver_val);
 void DrawRect_hor(Rect rect, Image image, int val);
 void DrawRect_ver(Rect rect, Image image, int val);
