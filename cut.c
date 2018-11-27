@@ -193,8 +193,9 @@ Image CopyImage(Image image)
  *      rect: rectangle around the block
  *      result: image where graphical result will be saved
  *      f: file in which OCR result will be written
+ *      w1 and w2, neural network parameters
  */
-void cutLine(Image image, Rect rect, Image result, FILE *f)
+void cutLine(Image image, Rect rect, Image result, FILE *f, float *w1, float *w2)
 {
     /*
     Image result;
@@ -228,7 +229,7 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
             active = 0;
             inrect.downRight.y = y - 1; // downright est exclus donc pas y-1
             DrawRect_hor(inrect, result, 2);
-            CutChar2(image, inrect, result, f);
+            CutChar2(image, inrect, result, f, w1, w2);
             fputc('\n', f);
         }
     }
@@ -236,7 +237,7 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
 	{
 		inrect.downRight.y = y - 1;
 		DrawRect_hor(inrect, result, 2);
-		CutChar2(image, inrect, result, f);
+		CutChar2(image, inrect, result, f, w1, w2);
 		fputc('\n', f);
 	}
 }
@@ -298,8 +299,9 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
  *      rect: rectangle around the line
  *      result: image where graphical result will be saved
  *      f: file in which OCR result will be written
+ *      w1 and w2, neural network parameters
  */
-void CutChar2(Image image, Rect line, Image result, FILE *f)
+void CutChar2(Image image, Rect line, Image result, FILE *f, float *w1, float *w2)
 {
     int thresold = GetLineThresold(image, line);
     // activation function (linear)
@@ -347,7 +349,7 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
             {
                 active = 0;
                 charPos.downRight.x = x - 1;
-                CharProcess(image, charPos, f);
+                CharProcess(image, charPos, f, w1, w2);
                 DrawRect_ver(charPos, result, 3);
                 xl = x;
             }
@@ -356,29 +358,33 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
     if(active)
     {
         charPos.downRight.x = x - 1;
-        CharProcess(image, charPos, f);
+        CharProcess(image, charPos, f, w1, w2);
         DrawRect_ver(charPos, result, 3);
     }
 }
 
-
-
-void CharProcess(Image image, Rect rect, FILE *f)
+/*
+ * Applies caracter cut of the image in the line specified bu rect
+ * AND calculates linethresold to estimate average space and detect spaces
+ * Also writes in FILE f the position of detected caracters and spaces too
+ * param :
+ *      image: image where informations will be read
+ *      rect: rectangle around the char
+ *      result: image where graphical result will be saved
+ *      f: file in which OCR result will be written
+ *      w1 and w2, neural network parameters
+ */
+void CharProcess(Image image, Rect rect, FILE *f, float *w1, float *w2)
 {
 	// check if multiple caracters in the same rect
 	unsigned char resized[256];
 	resize(image, rect, resized);
-	char output = 'C';
+	char output = Prediction(resized, w1, w2, 0);
 	fputc(output, f);
 }
 
-
-
-
-
-
 /*
- * Draws the borders of the rect in given image
+ * action to do when character position found
  * param :
  *      rect: rectangle to draw
  *      image: image where grapgical result will be saved
@@ -451,6 +457,7 @@ Image Parse_Image(Image image, int newImage)
     {
         result = CopyImage(image);
     }
+    /* // only use if cutborder breaks code
     Cord left;
     left.x = 0;
     left.y = 0;
@@ -460,9 +467,18 @@ Image Parse_Image(Image image, int newImage)
     Rect border;
     border.topLeft = left;
     border.downRight = right;
+    */
 
+    //cut border of image
     border = CutBorder(image);
 
+    //load NN
+    size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
+    float w1[nbInput * nbHidden + nbHidden];
+    float w2[nbHidden * nbOutput + nbOutput];
+    Initialization(w1, w2, 0);
+
+    //create file for output
     FILE *file = fopen("output.txt", "w+");
 
     if (file == NULL)
@@ -470,7 +486,7 @@ Image Parse_Image(Image image, int newImage)
         printf("Unexpected error when opening file !");
     }
 
-    cutLine(image, border, result, file);
+    cutLine(image, border, result, file, w1, w2);
 
     fclose(file);
 
