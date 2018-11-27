@@ -380,16 +380,19 @@ void CharProcess(Image image, Rect rect, FILE *f, float *w1, float *w2, char **t
 	unsigned char resized[256];
 	resize(image, rect, resized);
 	unsigned char carac = 0;
-	if(text != NULL)
+	if(*text != NULL)
     {
 	    do
 	    {
             carac = *text[0];
             if(carac == '\0')
+            {
                 *text = NULL;
+                break;
+            }
             else
             {
-                //printf("Associated car %c\n\n", carac);
+                printf("Associated car %c\n\n", carac);
                 *text = *text + 1;
             }
 	    }while (carac == ' ');
@@ -513,24 +516,21 @@ Image cut(char *path, char *text)
 
 
     // manage text pointers
-    char **textPointer;
-    if(text)
-    {
-        textPointer = &text;
-    }
-    else
-    {
-        textPointer = NULL;
-    }
+    char **textPointer = &text;
+    int isText = (text)? 1 : 0;
 
     result = Parse_Image(image1, textPointer, w1, w2);
 
-    if(*textPointer == NULL || **textPointer != '\0')
-        printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
-    // TODO : do not UPDATE weights
-    else
-        printf("Texte correspond !\n\n");
-    // TODO save weights
+    if(isText)
+    {
+        if(*textPointer == NULL || **textPointer != '\0')
+            printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
+            // TODO : do not UPDATE weights
+        else
+            printf("Texte correspond !(ou pas de texte)\n\n");
+        // TODO save weights
+    }
+
 
     return result;
 }
