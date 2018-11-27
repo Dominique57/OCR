@@ -6,19 +6,18 @@
 void print_array(unsigned char *array, size_t w, size_t h, unsigned char name[])
         //prints all values from an array
 {
-		printf("Array : %s\n", name);
-        for(size_t i=0; i<h; i++)
-        {
-                        for (size_t j=0; j<w; j++)
-                        {
-								if(array[i*w+j] == 0)
-									printf(" ");
-								else
-									printf("%i",array[i*w+j]);
-                        }
-                        printf("\n");
-        }
+	printf("Array : %s\n", name);
+	for(size_t i=0; i<h; i++)
+	{
+		for (size_t j=0; j<w; j++)
+		{
+			if(array[i*w+j] == 1)
+				printf("%i",array[i*w+j]);
+			else
+				printf(" ");
+		}
 		printf("\n");
+	}
 }
 
 
@@ -148,5 +147,5 @@ void resize(Image image, Rect rect, unsigned char resizedMat[256])
 		printf("resize: error resizing matrix\n");
 	}
 	
-	//print_array(resizedMat, 16, 16, "char");
+	// print_array(resizedMat, 16, 16, "char");
 }

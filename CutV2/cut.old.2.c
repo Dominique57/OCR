@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../Bmp_Parser.h"
-#include "../type/image.h"
-#include "../type/cut.h"
+#include "Bmp_Parser.h"
+#include "type/image.h"
+#include "type/cut.h"
+#include "resize.h"
+#include "NN.h"
 
-
-#include "cut.h"
 
 
 /*
@@ -19,9 +19,9 @@ int GetLineThresold(Image image, Rect line)
     // go to first col with black pixels
     int keep = 1;
     int x = line.topLeft.x;
-    for (; x < line.downRight.x && keep; ++x)
+    for (; x <= line.downRight.x && keep; ++x)
     {
-        for (int y = line.topLeft.y; y < line.downRight.y; ++y)
+        for (int y = line.topLeft.y; y <= line.downRight.y; ++y)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
@@ -45,10 +45,10 @@ int GetLineThresold(Image image, Rect line)
 
     // first line with black piexls,
     // count every space and length till no black pixels no more
-    for (; x < line.downRight.x; ++x)
+    for (; x <= line.downRight.x; ++x)
     {
         int y = line.topLeft.y;
-        for (; y < line.downRight.y; ++y)
+        for (; y <= line.downRight.y; ++y)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
@@ -69,7 +69,7 @@ int GetLineThresold(Image image, Rect line)
             }
 
         }
-        if  (y == line.downRight.y)
+        if  (y > line.downRight.y)
         {
             if (active == 0)
             {
@@ -125,7 +125,7 @@ Rect CutBorder(Image image)
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
             {
-                rect.downRight.x = x + 1;
+                rect.downRight.x = x;
                 keep = 0;
             }
         }
@@ -153,7 +153,7 @@ Rect CutBorder(Image image)
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
             {
-                rect.downRight.y = y + 1;
+                rect.downRight.y = y;
                 keep = 0;
             }
         }
@@ -193,8 +193,9 @@ Image CopyImage(Image image)
  *      rect: rectangle around the block
  *      result: image where graphical result will be saved
  *      f: file in which OCR result will be written
+ *      w1 and w2, neural network parameters
  */
-void cutLine(Image image, Rect rect, Image result, FILE *f)
+void cutLine(Image image, Rect rect, Image result, FILE *f, float *w1, float *w2)
 {
     /*
     Image result;
@@ -207,10 +208,10 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
     inrect.topLeft.x = rect.topLeft.x;
     inrect.downRight.x = rect.downRight.x;
 	int y = rect.topLeft.y;
-    for (; y < rect.downRight.y; ++y)
+    for (; y <= rect.downRight.y; ++y)
     {
         int x = rect.topLeft.x;
-        for (; x < rect.downRight.x; ++x)
+        for (; x <= rect.downRight.x; ++x)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1)
@@ -223,12 +224,12 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
                 break;
             }
         }
-        if (x == rect.downRight.x && active == 1)
+        if (x > rect.downRight.x && active == 1)
         {
             active = 0;
-            inrect.downRight.y = y - 1;
+            inrect.downRight.y = y - 1; // downright est exclus donc pas y-1
             DrawRect_hor(inrect, result, 2);
-            CutChar2(image, inrect, result, f);
+            CutChar2(image, inrect, result, f, w1, w2);
             fputc('\n', f);
         }
     }
@@ -236,7 +237,7 @@ void cutLine(Image image, Rect rect, Image result, FILE *f)
 	{
 		inrect.downRight.y = y - 1;
 		DrawRect_hor(inrect, result, 2);
-		CutChar2(image, inrect, result, f);
+		CutChar2(image, inrect, result, f, w1, w2);
 		fputc('\n', f);
 	}
 }
@@ -257,10 +258,10 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
     charPos.topLeft.y = line.topLeft.y;
     charPos.downRight.y = line.downRight.y;
     int x = line.topLeft.x;
-    for (; x < line.downRight.x; ++x)
+    for (; x <= line.downRight.x; ++x)
     {
         int y = line.topLeft.y;
-        for (; y < line.downRight.y; ++y)
+        for (; y <= line.downRight.y; ++y)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1 )
@@ -273,7 +274,7 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
                 break;
             }
         }
-        if  (y == line.downRight.y && active == 1)
+        if  (y > line.downRight.y && active == 1)
         {
             active = 0;
             charPos.downRight.x = x - 1;
@@ -298,8 +299,9 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
  *      rect: rectangle around the line
  *      result: image where graphical result will be saved
  *      f: file in which OCR result will be written
+ *      w1 and w2, neural network parameters
  */
-void CutChar2(Image image, Rect line, Image result, FILE *f)
+void CutChar2(Image image, Rect line, Image result, FILE *f, float *w1, float *w2)
 {
     int thresold = GetLineThresold(image, line);
     // activation function (linear)
@@ -312,10 +314,10 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
     charPos.topLeft.y = line.topLeft.y;
     charPos.downRight.y = line.downRight.y;
     int x = line.topLeft.x;
-    for (; x < line.downRight.x; ++x)
+    for (; x <= line.downRight.x; ++x)
     {
         int y = line.topLeft.y;
-        for (; y < line.downRight.y; ++y)
+        for (; y <= line.downRight.y; ++y)
         {
             int pos = y * image.w + x;
             if (image.data[pos] == 1 )
@@ -334,20 +336,20 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
                         rect.topLeft.y = line.topLeft.y;
                         rect.downRight.y = line.downRight.y;
                         DrawRect_hor(rect, image, 4);
-                        fputc('_', f);
+                        fputc(' ', f);
                     }
 
                 }
                 break;
             }
         }
-        if  (y == line.downRight.y)
+        if  (y > line.downRight.y)
         {
             if (active == 1)
             {
                 active = 0;
                 charPos.downRight.x = x - 1;
-                fputc('C', f);
+                CharProcess(image, charPos, f, w1, w2);
                 DrawRect_ver(charPos, result, 3);
                 xl = x;
             }
@@ -356,13 +358,33 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
     if(active)
     {
         charPos.downRight.x = x - 1;
-        fputc('C', f);
+        CharProcess(image, charPos, f, w1, w2);
         DrawRect_ver(charPos, result, 3);
     }
 }
 
 /*
- * Draws the borders of the rect in given image
+ * Applies caracter cut of the image in the line specified bu rect
+ * AND calculates linethresold to estimate average space and detect spaces
+ * Also writes in FILE f the position of detected caracters and spaces too
+ * param :
+ *      image: image where informations will be read
+ *      rect: rectangle around the char
+ *      result: image where graphical result will be saved
+ *      f: file in which OCR result will be written
+ *      w1 and w2, neural network parameters
+ */
+void CharProcess(Image image, Rect rect, FILE *f, float *w1, float *w2)
+{
+	// check if multiple caracters in the same rect
+	unsigned char resized[256];
+	resize(image, rect, resized);
+	char output = Prediction(resized, w1, w2, 0);
+	fputc(output, f);
+}
+
+/*
+ * action to do when character position found
  * param :
  *      rect: rectangle to draw
  *      image: image where grapgical result will be saved
@@ -435,18 +457,28 @@ Image Parse_Image(Image image, int newImage)
     {
         result = CopyImage(image);
     }
+    Rect border;
+    /* // only use if cutborder breaks code
     Cord left;
     left.x = 0;
     left.y = 0;
     Cord right;
     right.x = image.w;
     right.y = image.h;
-    Rect border;
     border.topLeft = left;
     border.downRight = right;
+    */
 
+    //cut border of image
     border = CutBorder(image);
 
+    //load NN
+    size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
+    float w1[nbInput * nbHidden + nbHidden];
+    float w2[nbHidden * nbOutput + nbOutput];
+    Initialization(w1, w2, 0);
+
+    //create file for output
     FILE *file = fopen("output.txt", "w+");
 
     if (file == NULL)
@@ -454,7 +486,7 @@ Image Parse_Image(Image image, int newImage)
         printf("Unexpected error when opening file !");
     }
 
-    cutLine(image, border, result, file);
+    cutLine(image, border, result, file, w1, w2);
 
     fclose(file);
 

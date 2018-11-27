@@ -4,7 +4,9 @@
 #include <SDL2/SDL_image.h>
 #include "../Bmp_Parser.h"
 #include "../type/image.h"
+#include "../type/cutLearn.h"
 #include "cut.h"
+
 //gcc -Wall -Wextra -std=c99 -lSDL2 -lSDL2_image -o main *.c
 
 //prints all values from an array
@@ -49,11 +51,16 @@ void print_image(Image im)
 
 int main()
 {
+    /*
     char path[] = "../dataset/tryme.bmp";
     Image image1;
     load_image(path, &image1);
     Image result = image1;
+
     result = Parse_Image(image1, 0);
+     */
+    Image result = LaunchAI("../dataset/testTEXT2.bmp", "Lorem ipsum elit. Ut venenatis ,");
+
 
     array_to_bmp(result.data, result.w, result.h, path, "test0.bmp");
 

@@ -195,7 +195,7 @@ Image CopyImage(Image image)
  *      f: file in which OCR result will be written
  *      w1 and w2, neural network parameters
  */
-void cutLine(Image image, Rect rect, Image result, FILE *f, float *w1, float *w2)
+void cutLine(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text)
 {
     /*
     Image result;
@@ -228,16 +228,16 @@ void cutLine(Image image, Rect rect, Image result, FILE *f, float *w1, float *w2
         {
             active = 0;
             inrect.downRight.y = y - 1; // downright est exclus donc pas y-1
-            DrawRect_hor(inrect, result, 2);
-            CutChar2(image, inrect, result, f, w1, w2);
+            DrawRect_hor(inrect, image, 2);
+            CutChar2(image, inrect, f, w1, w2, text);
             fputc('\n', f);
         }
     }
 	if(active)
 	{
 		inrect.downRight.y = y - 1;
-		DrawRect_hor(inrect, result, 2);
-		CutChar2(image, inrect, result, f, w1, w2);
+		DrawRect_hor(inrect, image, 2);
+		CutChar2(image, inrect, f, w1, w2, text);
 		fputc('\n', f);
 	}
 }
@@ -251,7 +251,7 @@ void cutLine(Image image, Rect rect, Image result, FILE *f, float *w1, float *w2
  *      result: image where graphical result will be saved
  *      f: file in which OCR result will be written
  */
-void CutChar(Image image, Rect line, Image result, FILE *f)
+void CutChar(Image image, Rect line, FILE *f)
 {
     int active = 0;
     Rect charPos;
@@ -277,16 +277,16 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
         if  (y > line.downRight.y && active == 1)
         {
             active = 0;
-            charPos.downRight.x = x;
+            charPos.downRight.x = x - 1;
             fputc('C', f);
-            DrawRect_ver(charPos, result, 3);
+            DrawRect_ver(charPos, image, 3);
         }
     }
     if(active)
     {
         charPos.downRight.x = x - 1;
         fputc('C', f);
-        DrawRect_ver(charPos, result, 3);
+        DrawRect_ver(charPos, image, 3);
     }
 }
 
@@ -301,7 +301,7 @@ void CutChar(Image image, Rect line, Image result, FILE *f)
  *      f: file in which OCR result will be written
  *      w1 and w2, neural network parameters
  */
-void CutChar2(Image image, Rect line, Image result, FILE *f, float *w1, float *w2)
+void CutChar2(Image image, Rect line, FILE *f, float *w1, float *w2, char **text)
 {
     int thresold = GetLineThresold(image, line);
     // activation function (linear)
@@ -349,8 +349,8 @@ void CutChar2(Image image, Rect line, Image result, FILE *f, float *w1, float *w
             {
                 active = 0;
                 charPos.downRight.x = x - 1;
-                CharProcess(image, charPos, f, w1, w2);
-                DrawRect_ver(charPos, result, 3);
+                CharProcess(image, charPos, f, w1, w2, text);
+                DrawRect_ver(charPos, image, 3);
                 xl = x;
             }
         }
@@ -358,8 +358,8 @@ void CutChar2(Image image, Rect line, Image result, FILE *f, float *w1, float *w
     if(active)
     {
         charPos.downRight.x = x - 1;
-        CharProcess(image, charPos, f, w1, w2);
-        DrawRect_ver(charPos, result, 3);
+        CharProcess(image, charPos, f, w1, w2, text);
+        DrawRect_ver(charPos, image, 3);
     }
 }
 
@@ -374,12 +374,28 @@ void CutChar2(Image image, Rect line, Image result, FILE *f, float *w1, float *w
  *      f: file in which OCR result will be written
  *      w1 and w2, neural network parameters
  */
-void CharProcess(Image image, Rect rect, FILE *f, float *w1, float *w2)
+void CharProcess(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text)
 {
-	// check if multiple caracters in the same rect
+    // check if multiple caracters in the same rect
 	unsigned char resized[256];
 	resize(image, rect, resized);
-	char output = Prediction(resized, w1, w2, 0);
+	unsigned char carac = 0;
+	if(text != NULL)
+    {
+	    do
+	    {
+            carac = *text[0];
+            if(carac == '\0')
+                *text = NULL;
+            else
+            {
+                //printf("Associated car %c\n\n", carac);
+                *text = *text + 1;
+            }
+	    }while (carac == ' ');
+
+    }
+    char output = Prediction(resized, w1, w2, carac);
 	fputc(output, f);
 }
 
@@ -450,13 +466,9 @@ void DrawRect_ver(Rect rect, Image image, int val)
  *      image: image where informations will be read
  *      newImage: bool to know if image shoould be modified or newly created
  */
-Image Parse_Image(Image image, int newImage)
+Image Parse_Image(Image image, char **text, float *w1, float *w2)
 {
     Image result = image;
-    if (newImage)
-    {
-        result = CopyImage(image);
-    }
     Rect border;
     /* // only use if cutborder breaks code
     Cord left;
@@ -472,12 +484,6 @@ Image Parse_Image(Image image, int newImage)
     //cut border of image
     border = CutBorder(image);
 
-    //load NN
-    size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
-    float w1[nbInput * nbHidden + nbHidden];
-    float w2[nbHidden * nbOutput + nbOutput];
-    Initialization(w1, w2, 0);
-
     //create file for output
     FILE *file = fopen("output.txt", "w+");
 
@@ -486,19 +492,45 @@ Image Parse_Image(Image image, int newImage)
         printf("Unexpected error when opening file !");
     }
 
-    cutLine(image, border, result, file, w1, w2);
+    cutLine(image, border, file, w1, w2, text);
 
     fclose(file);
 
     return result;
 }
 
-Image cut(char *path)
+Image cut(char *path, char *text)
 {
     Image image1;
     load_image(path, &image1);
     Image result = image1;
-    result = Parse_Image(image1, 0);
+
+    //load NN
+    size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
+    float w1[nbInput * nbHidden + nbHidden];
+    float w2[nbHidden * nbOutput + nbOutput];
+    Initialization(w1, w2, 0);
+
+
+    // manage text pointers
+    char **textPointer;
+    if(text)
+    {
+        textPointer = &text;
+    }
+    else
+    {
+        textPointer = NULL;
+    }
+
+    result = Parse_Image(image1, textPointer, w1, w2);
+
+    if(*textPointer == NULL || **textPointer != '\0')
+        printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
+    // TODO : do not UPDATE weights
+    else
+        printf("Texte correspond !\n\n");
+    // TODO save weights
 
     return result;
 }

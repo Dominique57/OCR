@@ -9,10 +9,7 @@ main.o: main.c
 	gcc -c main.c `pkg-config --cflags --libs gtk+-3.0`
 
 Bmp_Parser.o: Bmp_Parser.c
-	gcc -c Bmp_Parser.c 
-
-#image.o: type/image.c
-	#gcc -c type/image.c
+	gcc -c Bmp_Parser.c
 
 cut.o: cut.c
 	gcc -c cut.c
