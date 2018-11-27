@@ -3,9 +3,8 @@
 #include "Bmp_Parser.h"
 #include "type/image.h"
 #include "cut.h"
+#include "resize.h"
 
-
-#include "cut.h"
 
 
 /*
@@ -334,7 +333,7 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
                         rect.topLeft.y = line.topLeft.y;
                         rect.downRight.y = line.downRight.y;
                         DrawRect_hor(rect, image, 4);
-                        fputc('_', f);
+                        fputc(' ', f);
                     }
 
                 }
@@ -347,7 +346,7 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
             {
                 active = 0;
                 charPos.downRight.x = x - 1;
-                fputc('C', f);
+                CaracterProcessing(image, charPos, f);
                 DrawRect_ver(charPos, result, 3);
                 xl = x;
             }
@@ -356,10 +355,26 @@ void CutChar2(Image image, Rect line, Image result, FILE *f)
     if(active)
     {
         charPos.downRight.x = x - 1;
-        fputc('C', f);
+        CaracterProcessing(image, charPos, f);
         DrawRect_ver(charPos, result, 3);
     }
 }
+
+
+
+void CaracterProcessing(Image image, Rect rect, FILE *f)
+{
+	// check if multiple caracters in the same rect
+	unsigned char resized[256];
+	resize(image, rect, resized);
+	char output = 'C';
+	fputc(output, f);
+}
+
+
+
+
+
 
 /*
  * Draws the borders of the rect in given image

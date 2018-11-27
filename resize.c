@@ -11,7 +11,10 @@ void print_array(unsigned char *array, size_t w, size_t h, unsigned char name[])
         {
                         for (size_t j=0; j<w; j++)
                         {
-                                printf("%i|",array[i*w+j]);
+								if(array[i*w+j] == 0)
+									printf(" ");
+								else
+									printf("%i",array[i*w+j]);
                         }
                         printf("\n");
         }
@@ -144,5 +147,6 @@ void resize(Image image, Rect rect, unsigned char resizedMat[256])
 	{
 		printf("resize: error resizing matrix\n");
 	}
-
+	
+	//print_array(resizedMat, 16, 16, "char");
 }
