@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include "Bmp_Parser.h"
 #include "type/image.h"
-#include "RLSA/RLSA.h"
-#include "cut.h"
+#include "type/cut.h"
 #include "resize.h"
 
 //gcc `pkg-config gtk+-3.0 --cflags` *.c -o `pkg-config gtk+-3.0 --libs`
@@ -92,23 +91,6 @@ int test_resize()
 		return 0;
 }
 */
-
-Image tryRLSA(char *path)
-{
-	Image image;
-	image.w = getWidth(path);
-	image.h = getHeight(path);
-	unsigned char data[image.w * image.h];
-	if (parse_bmp(data, path)==1)
-	{
-		printf("File not found !\n filename=%s\n",path);
-	}
-	image.data = data;
-	print_Array(image.data, image.w, image.h);
-	printf("\n\n\n");
-	Image result = RLSA_launch(image, 200, 200);
-	return result;
-}
 
 
 void load()

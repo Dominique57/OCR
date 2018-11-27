@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "Bmp_Parser.h"
 #include "type/image.h"
-#include "cut.h"
+#include "type/cut.h"
 #include "resize.h"
 
 

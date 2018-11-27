@@ -2,7 +2,7 @@
 #define CUT_H
 #include <stdio.h>
 #include <stdlib.h>
-#include "type/image.h"
+#include "image.h"
 
 Rect CutBorder(Image image);
 Image CopyImage(Image image);
