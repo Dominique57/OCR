@@ -457,6 +457,7 @@ Image Parse_Image(Image image, int newImage)
     {
         result = CopyImage(image);
     }
+    Rect border;
     /* // only use if cutborder breaks code
     Cord left;
     left.x = 0;
@@ -464,7 +465,6 @@ Image Parse_Image(Image image, int newImage)
     Cord right;
     right.x = image.w;
     right.y = image.h;
-    Rect border;
     border.topLeft = left;
     border.downRight = right;
     */
