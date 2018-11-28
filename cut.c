@@ -392,7 +392,7 @@ void CharProcess(Image image, Rect rect, FILE *f, float *w1, float *w2, char **t
             }
             else
             {
-                printf("Associated car %c\n\n", carac);
+                //printf("Associated car %c\n\n", carac);
                 *text = *text + 1;
             }
 	    }while (carac == ' ');
@@ -509,26 +509,41 @@ Image cut(char *path, char *text)
     Image result = image1;
 
     //load NN
-    size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
+    //size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
     float w1[nbInput * nbHidden + nbHidden];
     float w2[nbHidden * nbOutput + nbOutput];
-    Initialization(w1, w2, 0);
+	//Initialization(w1, w2, 0);
+	//SaveNetwork(w1, w2);
+    Initialization(w1, w2, 1);
 
 
+	int isText = 0;
+	char **textPointer = NULL;
+	int i = 1;
+	do
+	{
+	load_image(path, &image1);
+	if(1 || i % 1000 == 0){printf("%i-", i);}
     // manage text pointers
     char **textPointer = &text;
-    int isText = (text)? 1 : 0;
+    isText = (text)? 1 : 0;
 
-    result = Parse_Image(image1, textPointer, w1, w2);
+    
+	result = Parse_Image(image1, textPointer, w1, w2);
+	} while(i++ <= 10000);
+
 
     if(isText)
     {
         if(*textPointer == NULL || **textPointer != '\0')
             printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
-            // TODO : do not UPDATE weights
+        // TODO : do not UPDATE weights
         else
-            printf("Texte correspond !(ou pas de texte)\n\n");
-        // TODO save weights
+		{
+			SaveNetwork(w1, w2);
+		    printf("Texte correspond !(ou pas de texte)\n\n");
+			// save weights
+		}
     }
 
 

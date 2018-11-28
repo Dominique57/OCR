@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "NN.h"
 
 //Defining layers
 #define nbInput 256
@@ -14,11 +15,13 @@ const float eta = 0.025f;
 const char chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789";
 
 //Export/import
+/*
 typedef struct Network
 {
         float ws[nbInput*nbHidden*nbOutput];
 
 } Network;
+*/
 
 int FileExists(const char *fname)
 {

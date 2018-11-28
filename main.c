@@ -116,7 +116,7 @@ void convert()
 		printf("File not found !\n filename=%s\n",filename);
 	}
 	char text[] = "Lorem ipsum elit. Utvenenatis,";
-	Image cutted = cut(filename, NULL);
+	Image cutted = cut(filename, text);
 	char n[]="converted.bmp";
 	array_to_bmp(cutted.data, cutted.w, cutted.h, filename, n);
 	gtk_image_set_from_file(GTK_IMAGE(image_glo), n);
