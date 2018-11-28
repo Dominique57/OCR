@@ -4,11 +4,11 @@
 #include "NN.h"
 
 //Defining layers
-#define nbInput 256
-#define nbHidden 256
+//#define nbInput 256
+//#define nbHidden 256
 
 //Possible outputs
-#define nbOutput 72
+//#define nbOutput 72
 
 const float eta = 0.025f;
 
