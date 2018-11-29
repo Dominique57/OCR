@@ -525,7 +525,7 @@ Image Parse_Image(Image image, char **text, float *w1, float *w2)
     return result;
 }
 
-Image cut(char *path, char *text)
+Image cut2(char *path, char *text)
 {
     Image image1;
     image1.data = NULL;
@@ -570,7 +570,7 @@ Image cut(char *path, char *text)
     return *(image1.copy);
 }
 
-Image cut2(char *path, char *text)
+Image cut(char *path, char *text)
 {
     Image image1;
     image1.data = NULL;
