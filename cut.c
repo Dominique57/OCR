@@ -80,7 +80,8 @@ int GetLineThresold(Image image, Rect line)
             bufferCount++;
         }
     }
-    return (spaceCount != 0) ? colCount / spaceCount : 0;
+    int value = (spaceCount != 0) ? ( colCount / spaceCount )  : 0;
+    return value * 1.6;
 }
 
 /*
@@ -167,22 +168,43 @@ Rect CutBorder(Image image)
  * Sends back a copy of a given Image struct
  * param :
  *      image: image where informations will be read
+ *      dest : pointer to image where data will be copied
  */
-Image CopyImage(Image image)
+void CopyImage(Image image, Image *dest)
 {
-    Image result;
-    result.w = image.w;
-    result.h = image.h;
-    //unsigned char data[ result.w * result.h ];
-    unsigned char *data = malloc((image.h * image.w) * sizeof(unsigned char));
-    result.data = data;
+	if(dest == NULL)
+		return;
+	size_t arrSize = (image.h * image.w);
+	dest->w = image.w;
+	dest->h = image.h;
 
-    int max = result.w * result.h;
-    for (int k = 0; k < max; ++k)
+	if(dest->data)
+	    free(dest->data);
+
+	dest->data = malloc(arrSize * sizeof(unsigned char));
+	if(dest->data == NULL)
     {
-        data[k] = image.data[k];
+	    printf("No free memory availble ! Image copy impossible !\n");
+	    return;
     }
-    return result;
+
+    for (size_t k = 0; k < arrSize; ++k)
+    {
+        dest->data[k] = image.data[k];
+    }
+}
+
+/*
+ * Frees the image, that is to say the malloc of data
+ * param :
+ *      image : image to free
+ */
+void FreeImage(Image image)
+{
+    if(image.data)
+        free(image.data);
+    if(image.copy)
+        FreeImage(*(image.copy));
 }
 
 /*
@@ -195,6 +217,7 @@ Image CopyImage(Image image)
  *      f: file in which OCR result will be written
  *      w1 and w2, neural network parameters
  */
+
 void cutLine(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text)
 {
     /*
@@ -227,8 +250,8 @@ void cutLine(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text)
         if (x > rect.downRight.x && active == 1)
         {
             active = 0;
-            inrect.downRight.y = y - 1; // downright est exclus donc pas y-1
-            DrawRect_hor(inrect, image, 2);
+            inrect.downRight.y = y - 1; //downright est exclus, pas y-1
+            DrawRect_hor(inrect, *(image.copy), 2);
             CutChar2(image, inrect, f, w1, w2, text);
             fputc('\n', f);
         }
@@ -236,7 +259,7 @@ void cutLine(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text)
 	if(active)
 	{
 		inrect.downRight.y = y - 1;
-		DrawRect_hor(inrect, image, 2);
+		DrawRect_hor(inrect, *(image.copy), 2);
 		CutChar2(image, inrect, f, w1, w2, text);
 		fputc('\n', f);
 	}
@@ -301,11 +324,10 @@ void CutChar(Image image, Rect line, FILE *f)
  *      f: file in which OCR result will be written
  *      w1 and w2, neural network parameters
  */
+
 void CutChar2(Image image, Rect line, FILE *f, float *w1, float *w2, char **text)
 {
     int thresold = GetLineThresold(image, line);
-    // activation function (linear)
-    thresold = 1.5 * thresold;
 
     int xl = line.topLeft.x, xr = line.topLeft.x;
 
@@ -350,7 +372,7 @@ void CutChar2(Image image, Rect line, FILE *f, float *w1, float *w2, char **text
                 active = 0;
                 charPos.downRight.x = x - 1;
                 CharProcess(image, charPos, f, w1, w2, text);
-                DrawRect_ver(charPos, image, 3);
+                DrawRect(charPos, *(image.copy), 3, 3);
                 xl = x;
             }
         }
@@ -359,7 +381,7 @@ void CutChar2(Image image, Rect line, FILE *f, float *w1, float *w2, char **text
     {
         charPos.downRight.x = x - 1;
         CharProcess(image, charPos, f, w1, w2, text);
-        DrawRect_ver(charPos, image, 3);
+        DrawRect(charPos, *(image.copy), 3, 3);
     }
 }
 
@@ -374,6 +396,7 @@ void CutChar2(Image image, Rect line, FILE *f, float *w1, float *w2, char **text
  *      f: file in which OCR result will be written
  *      w1 and w2, neural network parameters
  */
+
 void CharProcess(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text)
 {
     // check if multiple caracters in the same rect
@@ -502,50 +525,94 @@ Image Parse_Image(Image image, char **text, float *w1, float *w2)
     return result;
 }
 
-Image cut(char *path, char *text)
+Image cut2(char *path, char *text)
 {
     Image image1;
     load_image(path, &image1);
-    Image result = image1;
+    Image copy;
+    CopyImage(image1, &copy);
+    image1.copy = &copy;
 
     //load NN
     //size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
     float w1[nbInput * nbHidden + nbHidden];
     float w2[nbHidden * nbOutput + nbOutput];
+	
+	//if file does not exist, uncomment, run and comment following lines
 	//Initialization(w1, w2, 0);
 	//SaveNetwork(w1, w2);
     Initialization(w1, w2, 1);
 
-
-	int isText = 0;
-	char **textPointer = NULL;
-	int i = 1;
-	do
-	{
-	load_image(path, &image1);
-	if(1 || i % 1000 == 0){printf("%i-", i);}
-    // manage text pointers
     char **textPointer = &text;
-    isText = (text)? 1 : 0;
+    int isText = (text)? 1 : 0;
 
-    
-	result = Parse_Image(image1, textPointer, w1, w2);
-	} while(i++ <= 10000);
-
+	image1 = Parse_Image(image1, textPointer, w1, w2);
 
     if(isText)
     {
         if(*textPointer == NULL || **textPointer != '\0')
+        {
             printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
-        // TODO : do not UPDATE weights
+            Initialization(w1, w2, 1);
+        }
         else
 		{
 			SaveNetwork(w1, w2);
 		    printf("Texte correspond !(ou pas de texte)\n\n");
-			// save weights
 		}
     }
 
+    return *(image1.copy);
+}
 
-    return result;
+Image cut(char *path, char *text)
+{
+    Image image1;
+    image1.data = NULL;
+    image1.copy = NULL;
+    load_image(path, &image1);
+    Image copy;
+    copy.data = NULL;
+    copy.copy = NULL;
+    CopyImage(image1, &copy);
+    image1.copy = &copy;
+
+    //load NN
+    //size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
+    float w1[nbInput * nbHidden + nbHidden];
+    float w2[nbHidden * nbOutput + nbOutput];
+    Initialization(w1, w2, 0);
+    //SaveNetwork(w1, w2);
+
+
+    int isText = (text)? 1 : 0;;
+    char **textPointer = &text;
+    int i = 1;
+    do
+    {
+        char **textPointer = &text;
+        image1 = Parse_Image(image1, textPointer, w1, w2);
+    } while(i++ <= 100);
+
+
+    if(isText)
+    {
+        if(textPointer)
+        {
+            if(*textPointer == NULL || **textPointer != '\0')
+                printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
+                // TODO : do not UPDATE weights
+            else
+            {
+                SaveNetwork(w1, w2);
+                printf("Texte correspond !(ou pas de texte)\n\n");
+                // save weights
+            }
+        }
+        else
+            printf("Unknow error !\n");
+    }
+
+
+    return *(image1.copy);
 }

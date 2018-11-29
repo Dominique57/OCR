@@ -7,6 +7,7 @@ struct Image
     size_t w;
     size_t h;
     unsigned char *data;
+    Image* copy;
 };
 
 typedef struct Cord Cord;

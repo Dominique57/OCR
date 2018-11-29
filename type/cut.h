@@ -5,7 +5,8 @@
 #include "image.h"
 
 Rect CutBorder(Image image);
-Image CopyImage(Image image);
+void CopyImage(Image image, Image *destination);
+void FreeImage(Image image);
 void cutLine(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text);
 void CutChar(Image image, Rect line, FILE *f);
 void CutChar2(Image image, Rect line, FILE *f, float *w1, float *w2, char **text);
