@@ -251,7 +251,7 @@ void cutLine(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text)
         {
             active = 0;
             inrect.downRight.y = y - 1; //downright est exclus, pas y-1
-            DrawRect_hor(inrect, *(image.copy), 2);
+            DrawRect_hor(inrect, *(image.copy), 4);
             CutChar2(image, inrect, f, w1, w2, text);
             fputc('\n', f);
         }
@@ -259,7 +259,7 @@ void cutLine(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text)
 	if(active)
 	{
 		inrect.downRight.y = y - 1;
-		DrawRect_hor(inrect, *(image.copy), 2);
+		DrawRect_hor(inrect, *(image.copy), 4);
 		CutChar2(image, inrect, f, w1, w2, text);
 		fputc('\n', f);
 	}
@@ -302,14 +302,14 @@ void CutChar(Image image, Rect line, FILE *f)
             active = 0;
             charPos.downRight.x = x - 1;
             fputc('C', f);
-            DrawRect_ver(charPos, image, 3);
+            DrawRect_ver(charPos, image, 2);
         }
     }
     if(active)
     {
         charPos.downRight.x = x - 1;
         fputc('C', f);
-        DrawRect_ver(charPos, image, 3);
+        DrawRect_ver(charPos, image, 2);
     }
 }
 
@@ -357,7 +357,7 @@ void CutChar2(Image image, Rect line, FILE *f, float *w1, float *w2, char **text
                         rect.downRight.x = xr-1;
                         rect.topLeft.y = line.topLeft.y;
                         rect.downRight.y = line.downRight.y;
-                        DrawRect_hor(rect, *(image.copy), 4);
+                        DrawRect_hor(rect, *(image.copy), 3);
                         fputc(' ', f);
                     }
 
@@ -372,7 +372,7 @@ void CutChar2(Image image, Rect line, FILE *f, float *w1, float *w2, char **text
                 active = 0;
                 charPos.downRight.x = x - 1;
                 CharProcess(image, charPos, f, w1, w2, text);
-                DrawRect(charPos, *(image.copy), 3, 3);
+                DrawRect_ver(charPos, *(image.copy), 2);
                 xl = x;
             }
         }
@@ -381,7 +381,7 @@ void CutChar2(Image image, Rect line, FILE *f, float *w1, float *w2, char **text
     {
         charPos.downRight.x = x - 1;
         CharProcess(image, charPos, f, w1, w2, text);
-        DrawRect(charPos, *(image.copy), 3, 3);
+        DrawRect_ver(charPos, *(image.copy), 2);
     }
 }
 
@@ -396,10 +396,23 @@ void CutChar2(Image image, Rect line, FILE *f, float *w1, float *w2, char **text
  *      f: file in which OCR result will be written
  *      w1 and w2, neural network parameters
  */
-
 void CharProcess(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text)
 {
     // check if multiple caracters in the same rect
+    int active = 1;
+    for (int y = rect.downRight.y; y <= rect.topLeft.y && active; --y)
+    {
+        for (int x = rect.topLeft.x; x <= rect.downRight.x; ++x)
+        {
+            int pos = y * image.w + x;
+            if(image.data[pos] == 1)
+            {
+                rect.downRight.y = y;
+                active = 0;
+                break;
+            }
+        }
+    }
 	unsigned char resized[256];
 	resize(image, rect, resized);
 	unsigned char carac = 0;
@@ -607,7 +620,7 @@ Image cut(char *path, char *text)
         {
             if(*textCur == NULL || **textCur != '\0')
                 printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
-                // TODO : do not UPDATE weights
+                // do not UPDATE weights
             else
             {
                 SaveNetwork(w1, w2);
