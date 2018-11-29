@@ -115,7 +115,7 @@ void convert()
 	{
 		printf("File not found !\n filename=%s\n",filename);
 	}
-	char text[] = "Lorem ipsum elit. Utvenenatis,";
+	char text[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789";
 	Image cutted = cut(filename, text);
 	char n[]="converted.bmp";
 	array_to_bmp(cutted.data, cutted.w, cutted.h, filename, n);

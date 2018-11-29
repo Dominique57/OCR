@@ -357,7 +357,7 @@ void CutChar2(Image image, Rect line, FILE *f, float *w1, float *w2, char **text
                         rect.downRight.x = xr-1;
                         rect.topLeft.y = line.topLeft.y;
                         rect.downRight.y = line.downRight.y;
-                        DrawRect_hor(rect, image, 4);
+                        DrawRect_hor(rect, *(image.copy), 4);
                         fputc(' ', f);
                     }
 
@@ -525,46 +525,6 @@ Image Parse_Image(Image image, char **text, float *w1, float *w2)
     return result;
 }
 
-Image cut2(char *path, char *text)
-{
-    Image image1;
-    load_image(path, &image1);
-    Image copy;
-    CopyImage(image1, &copy);
-    image1.copy = &copy;
-
-    //load NN
-    //size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
-    float w1[nbInput * nbHidden + nbHidden];
-    float w2[nbHidden * nbOutput + nbOutput];
-	
-	//if file does not exist, uncomment, run and comment following lines
-	//Initialization(w1, w2, 0);
-	//SaveNetwork(w1, w2);
-    Initialization(w1, w2, 1);
-
-    char **textPointer = &text;
-    int isText = (text)? 1 : 0;
-
-	image1 = Parse_Image(image1, textPointer, w1, w2);
-
-    if(isText)
-    {
-        if(*textPointer == NULL || **textPointer != '\0')
-        {
-            printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
-            Initialization(w1, w2, 1);
-        }
-        else
-		{
-			SaveNetwork(w1, w2);
-		    printf("Texte correspond !(ou pas de texte)\n\n");
-		}
-    }
-
-    return *(image1.copy);
-}
-
 Image cut(char *path, char *text)
 {
     Image image1;
@@ -581,36 +541,86 @@ Image cut(char *path, char *text)
     //size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
     float w1[nbInput * nbHidden + nbHidden];
     float w2[nbHidden * nbOutput + nbOutput];
+	
+	//if file does not exist, uncomment, run and comment following lines
+	//Initialization(w1, w2, 0);
+	//SaveNetwork(w1, w2);
+    Initialization(w1, w2, 1);
+
+    char *textPointer = text;
+    char **textCur = &text;
+    int isText = (text)? 1 : 0;
+
+	image1 = Parse_Image(image1, textCur, w1, w2);
+
+    if(isText)
+    {
+        if(*textCur == NULL || **textCur != '\0')
+        {
+            printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
+            Initialization(w1, w2, 1);
+        }
+        else
+		{
+			SaveNetwork(w1, w2);
+		    printf("Texte correspond !(ou pas de texte)\n\n");
+		}
+    }
+
+    return *(image1.copy);
+}
+
+Image cut2(char *path, char *text)
+{
+    Image image1;
+    image1.data = NULL;
+    image1.copy = NULL;
+    load_image(path, &image1);
+    Image copy;
+    copy.data = NULL;
+    copy.copy = NULL;
+    CopyImage(image1, &copy);
+    image1.copy = &copy;
+
+    //load NN
+    //size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
+    float w1[nbInput * nbHidden + nbHidden];
+    float w2[nbHidden * nbOutput + nbOutput];
     Initialization(w1, w2, 0);
+
+
     //SaveNetwork(w1, w2);
-
-
-    int isText = (text)? 1 : 0;;
-    char **textPointer = &text;
+    char *textPointer = text;
+    char **textCur = &text;
+    int isText = (text)? 1 : 0;
     int i = 1;
     do
     {
-        char **textPointer = &text;
-        image1 = Parse_Image(image1, textPointer, w1, w2);
-    } while(i++ <= 100);
+        *textCur = textPointer;
+        image1 = Parse_Image(image1, textCur, w1, w2);
+    } while(i++ <= 1);
 
 
     if(isText)
     {
-        if(textPointer)
+        if(textCur)
         {
-            if(*textPointer == NULL || **textPointer != '\0')
+            if(*textCur == NULL || **textCur != '\0')
                 printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
                 // TODO : do not UPDATE weights
             else
             {
                 SaveNetwork(w1, w2);
-                printf("Texte correspond !(ou pas de texte)\n\n");
+                printf("Texte correspond !\n\n");
                 // save weights
             }
         }
         else
             printf("Unknow error !\n");
+    }
+    else
+    {
+        printf("Pas de texte!\n\n");
     }
 
 
