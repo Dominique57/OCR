@@ -505,6 +505,7 @@ Image cut_new(char *path, char *text, int learningIteration)
         {
             while(--learningIteration > 0)
             {
+                *textCur = textPointer;
                 ReadList(image1, NULL, listHead, textCur, w1, w2);
             }
             SaveNetwork(w1, w2);
