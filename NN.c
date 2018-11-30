@@ -12,7 +12,7 @@
 
 const float eta = 0.3f;
 
-const char chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789";
+const char chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789";
 
 //Export/import
 typedef struct Network
@@ -66,7 +66,7 @@ Network *CreateNetwork(float w1[], float w2[])
 	size_t maxLen=totalW1+totalW2;
 
 	Network *network=malloc(sizeof(Network));
-    
+
 	size_t k=totalW1;
 
 	for (size_t i=0; i<=totalW1; i++)
@@ -140,23 +140,28 @@ void ConvertChar(char letter, float target[])
 void Backpropagation(unsigned char m[], float w1[], float w2[], float output[], float target[], float outh[], float sumExp, float outexp[])
 {
 	for (size_t i = 0; i < nbOutput; i++) {
+
+    //Update w2 biases
+		float deltab2 = eta * (output[i] - target[i]) * SoftmaxDeriv(outexp[i], sumExp);
+		w2[nbHidden * nbOutput + i] -= deltab2;
+
 		for (size_t j = 0; j < nbHidden; j++) {
+
+      	//Update w1 biases
+  			float deltab1 = deltab2 * w2[i * nbHidden + j] * Sigmoid(outh[j], 1);
+  			w1[nbHidden * nbInput + j] -= deltab1;
+
 			for (size_t k = 0; k < nbInput; k++) {
 				//Update w1
-				float deltaw1 = (output[i] - target[i]) * SoftmaxDeriv(outexp[i], sumExp) * w2[i * nbHidden + j] * Sigmoid(outh[j], 1) * m[k];
-				w1[j * nbInput + k] -= deltaw1 * eta;
+				float deltaw1 = deltab1 * m[k];
+				w1[j * nbInput + k] -= deltaw1;
 			}
-			//Update w1 biases
-			float deltaw1 = (output[i] - target[i]) * SoftmaxDeriv(outexp[i], sumExp) * w2[i * nbHidden + j] * Sigmoid(outh[j], 1);
-			w1[nbHidden * nbInput + j] -= deltaw1 * eta;
 
 			//Update w2
-			float deltaw2 = (output[i] - target[i]) * SoftmaxDeriv(outexp[i], sumExp) * outh[j];
-			w2[i * nbOutput + j] -= deltaw2 * eta;
+			float deltaw2 = deltab2 * outh[j];
+			w2[i * nbHidden + j] -= deltaw2;
 		}
-		//Update w2 biases
-		float deltaw2 = (output[i] - target[i]) * SoftmaxDeriv(outexp[i], sumExp);
-		w2[nbHidden * nbOutput + i] -= deltaw2 * eta;
+
 
 	}
 }
@@ -264,7 +269,7 @@ int test()
 	//
 	// Testing
 	/*
-	
+
 	unsigned char m[16*16];
 	for (size_t i = 0; i < 256; i++) {
 		m[i] = 1;
@@ -273,11 +278,11 @@ int test()
 	for (size_t i = 0; i < 10000; i++)
 		Prediction(m, w1, w2, '?');
 	*/
-	
+
 
 	printf("w1[5]=%f", w1[5]);
 	printf(", w2[5]=%f\n", w2[5]);
-	
+
 	//
 	//TEST SAVE
 	/*
