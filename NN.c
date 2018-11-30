@@ -225,16 +225,7 @@ void Initialization(float w1[], float w2[], unsigned char import)
 	const size_t totalW1 = nbInput * nbHidden + nbHidden;
 	const size_t totalW2 = nbHidden * nbOutput + nbOutput;
 
-	if (import == 0)
-	{
-		//Creating random weights
-		for (size_t i = 0; i < totalW1; i++)
-			w1[i] = 2.0f*rand()/RAND_MAX - 1;
-
-		for (size_t i = 0; i < totalW2; i++)
-			w2[i] = 2.0f*rand()/RAND_MAX - 1;
-	}
-	else
+	if (import && FileExists("NetSave"))
 	{
 		Network *network=LoadNetwork("NetSave");
 		for (size_t i=0; i< totalW1; i++)
@@ -248,6 +239,15 @@ void Initialization(float w1[], float w2[], unsigned char import)
 		}
 
 		free(network);
+	}
+	else
+	{
+		//Creating random weights
+		for (size_t i = 0; i < totalW1; i++)
+			w1[i] = 2.0f*rand()/RAND_MAX - 1;
+
+		for (size_t i = 0; i < totalW2; i++)
+			w2[i] = 2.0f*rand()/RAND_MAX - 1;
 	}
 }
 
