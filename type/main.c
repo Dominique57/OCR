@@ -1,18 +1,23 @@
-#include "queue.h"
+#include "image.h"
 
 int main()
 {
-    Queue *q = InitQueue();
-    int a = 1, b = 2, c = 3;
-    Enqueue(&a, q);
-    Enqueue(&b, q);
-    Enqueue(&c, q);
-    printQueue(q);
-    /*
-    for (int i = 0; i < 3; ++i)
-    {
-        int val = Dequeue(q);
-        printf("%i\n", val);
-    }
-    */
+    ListHead *list = InitListHead();
+    ListChar *elt1 = InitListChar();
+    elt1->type = 1;
+    ListChar *elt2 = InitListChar();
+    elt2->type = 2;
+    ListChar *elt3 = InitListChar();
+    elt3->type = 3;
+    ListChar *elt4 = InitListChar();
+    elt4->type = 4;
+    ListChar *elt5 = InitListChar();
+    elt5->type = 5;
+    AddListChar(list, elt1);
+    AddListChar(list, elt2);
+    AddListChar(list, elt3);
+    AddListChar(list, elt4);
+    AddListChar(list, elt5);
+    PrintListType(list);
+    FreeList(list);
 }

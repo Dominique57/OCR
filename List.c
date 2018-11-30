@@ -1,16 +1,34 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "type/image.h"
 
-void AddListChar(ListHead *list, ListChar *elt);
-int IsEmpty(ListHead *list);
-ListChar *InitListChar();
-void FreeListChar(ListChar *list);
-void FreeList(ListHead *list);
-ListHead *CreateList();
+void CopyRect(Rect src, Rect *dst)
+{
+	dst->downRight.x = src.downRight.x;
+	dst->downRight.y = src.downRight.y;
+	dst->topLeft.x = src.topLeft.x;
+	dst->topLeft.y = src.topLeft.y;
+}
 
+void PrintListType(ListHead *list)
+{
+	if(IsEmpty(list))
+		printf("List is empty !\n");
+	else
+	{
+		ListChar *cur = list->head;
+		while(cur)
+		{
+			char car = 'c';
+			if(cur->type == 1)
+				car = ' ';
+			else if (cur->type == 2)
+				car = '\n';
+			printf("%c", car);
+			cur = cur->next;
+		}
+	}
+}
 
-ListHead *CreateList()
+ListHead *InitListHead()
 {
 	ListHead *p = NULL;
 	p = malloc(sizeof(ListHead));
@@ -29,26 +47,26 @@ void FreeList(ListHead *list)
 		FreeListChar(cur);
 		cur = next;
 	}
+	free(list);
 }
 
 void FreeListChar(ListChar *list)
 {
-	if(list)
-		free(list);
+	free(list);
 }
 
 ListChar *InitListChar()
 {
-	ListChar *p = NULL;
+	ListChar *p;
 	p = malloc(sizeof(ListChar));
 	if(!p)
 		return NULL;
 	p->next = NULL;
 	p->prev = NULL;
-	p->pos->topLeft.x = 0;
-	p->pos->downRight.y = 0;
-	p->pos->topLeft.x = 0;
-	p->pos->downRight.y = 0;
+	p->pos.topLeft.x = 0;
+	p->pos.downRight.y = 0;
+	p->pos.topLeft.x = 0;
+	p->pos.downRight.y = 0;
 	p->type = 0;
 	return p;
 }

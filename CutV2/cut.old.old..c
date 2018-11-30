@@ -158,20 +158,20 @@ Rect CutBorder(Image image)
  */
 void CopyImage(Image image, Image *dest)
 {
-	if(dest == NULL)
-		return;
-	size_t arrSize = (image.h * image.w);
-	dest->w = image.w;
-	dest->h = image.h;
+    if(dest == NULL)
+        return;
+    size_t arrSize = (image.h * image.w);
+    dest->w = image.w;
+    dest->h = image.h;
 
-	if(dest->data)
-	    free(dest->data);
+    if(dest->data)
+        free(dest->data);
 
-	dest->data = malloc(arrSize * sizeof(unsigned char));
-	if(dest->data == NULL)
+    dest->data = malloc(arrSize * sizeof(unsigned char));
+    if(dest->data == NULL)
     {
-	    printf("No free memory availble ! Image copy impossible !\n");
-	    return;
+        printf("No free memory availble ! Image copy impossible !\n");
+        return;
     }
 
     for (size_t k = 0; k < arrSize; ++k)
@@ -191,6 +191,57 @@ void FreeImage(Image image)
         free(image.data);
     if(image.copy)
         FreeImage(*(image.copy));
+}
+
+/*
+ * For a given image in a rect zone, detects lines
+ * It also applies caracter detection and eventually space detection
+ * param :
+ *      image: image where informations will be read
+ *      rect: rectangle around the block
+ *      result: image where graphical result will be saved
+ *      f: file in which OCR result will be written
+ *      w1 and w2, neural network parameters
+ */
+void cutLine(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text)
+{
+    int active = 0;
+    Rect inrect;
+    inrect.topLeft.x = rect.topLeft.x;
+    inrect.downRight.x = rect.downRight.x;
+    int y = rect.topLeft.y;
+    for (; y <= rect.downRight.y; ++y)
+    {
+        int x = rect.topLeft.x;
+        for (; x <= rect.downRight.x; ++x)
+        {
+            int pos = y * image.w + x;
+            if (image.data[pos] == 1)
+            {
+                if (active == 0)
+                {
+                    inrect.topLeft.y = y;
+                    active = 1;
+                }
+                break;
+            }
+        }
+        if (x > rect.downRight.x && active == 1)
+        {
+            active = 0;
+            inrect.downRight.y = y - 1; //downright est exclus, pas y-1
+            DrawRect_hor(inrect, *(image.copy), 4);
+            CutChar(image, inrect, f, w1, w2, text);
+            fputc('\n', f);
+        }
+    }
+    if(active)
+    {
+        inrect.downRight.y = y - 1;
+        DrawRect_hor(inrect, *(image.copy), 4);
+        CutChar(image, inrect, f, w1, w2, text);
+        fputc('\n', f);
+    }
 }
 
 void cutLine2(Image image, Rect rect, ListHead *list)
@@ -319,6 +370,77 @@ void CutChar2(Image image, Rect line, ListHead *list)
  * Also writes in FILE f the position of detected caracters and spaces too
  * param :
  *      image: image where informations will be read
+ *      rect: rectangle around the line
+ *      result: image where graphical result will be saved
+ *      f: file in which OCR result will be written
+ *      w1 and w2, neural network parameters
+ */
+void CutChar(Image image, Rect line, FILE *f, float *w1, float *w2, char **text)
+{
+    int thresold = GetLineThresold(image, line);
+
+    int xl = line.topLeft.x, xr = line.topLeft.x;
+
+    int active = 0;
+    Rect charPos;
+    charPos.topLeft.y = line.topLeft.y;
+    charPos.downRight.y = line.downRight.y;
+    int x = line.topLeft.x;
+    for (; x <= line.downRight.x; ++x)
+    {
+        int y = line.topLeft.y;
+        for (; y <= line.downRight.y; ++y)
+        {
+            int pos = y * image.w + x;
+            if (image.data[pos] == 1 )
+            {
+                if  (active == 0)
+                {
+                    charPos.topLeft.x = x;
+                    active = 1;
+                    // compared computed space to thresold
+                    xr = x;
+                    if (xr - xl > thresold)
+                    {
+                        Rect rect;
+                        rect.topLeft.x = xl;
+                        rect.downRight.x = xr-1;
+                        rect.topLeft.y = line.topLeft.y;
+                        rect.downRight.y = line.downRight.y;
+                        DrawRect_hor(rect, *(image.copy), 3);
+                        fputc(' ', f);
+                    }
+
+                }
+                break;
+            }
+        }
+        if  (y > line.downRight.y)
+        {
+            if (active == 1)
+            {
+                active = 0;
+                charPos.downRight.x = x - 1;
+                CharProcess(image, charPos, f, w1, w2, text);
+                DrawRect_ver(charPos, *(image.copy), 2);
+                xl = x;
+            }
+        }
+    }
+    if(active)
+    {
+        charPos.downRight.x = x - 1;
+        CharProcess(image, charPos, f, w1, w2, text);
+        DrawRect_ver(charPos, *(image.copy), 2);
+    }
+}
+
+/*
+ * Applies caracter cut of the image in the line specified bu rect
+ * AND calculates linethresold to estimate average space and detect spaces
+ * Also writes in FILE f the position of detected caracters and spaces too
+ * param :
+ *      image: image where informations will be read
  *      rect: rectangle around the char
  *      result: image where graphical result will be saved
  *      f: file in which OCR result will be written
@@ -426,6 +548,148 @@ void DrawRect_ver(Rect rect, Image image, int val)
         int pos = xpos + y * image.w;
         image.data[pos] = val;
     }
+}
+
+/*
+ * Calling function applying the image segmentation to a given image struct
+ * param :
+ *      image: image where informations will be read
+ *      newImage: bool to know if image shoould be modified or newly created
+ */
+Image Parse_Image(Image image, char **text, float *w1, float *w2)
+{
+    Image result = image;
+    Rect border;
+    /* // only use if cutborder breaks code
+    Cord left;
+    left.x = 0;
+    left.y = 0;
+    Cord right;
+    right.x = image.w;
+    right.y = image.h;
+    border.topLeft = left;
+    border.downRight = right;
+    */
+
+    //cut border of image
+    border = CutBorder(image);
+
+    //create file for output
+    FILE *file = fopen("output.txt", "w+");
+
+    if (file == NULL)
+    {
+        printf("Unexpected error when opening file !");
+    }
+
+    cutLine(image, border, file, w1, w2, text);
+
+    fclose(file);
+
+    return result;
+}
+
+Image cut_old(char *path, char *text)
+{
+    Image image1;
+    image1.data = NULL;
+    image1.copy = NULL;
+    load_image(path, &image1);
+    Image copy;
+    copy.data = NULL;
+    copy.copy = NULL;
+    CopyImage(image1, &copy);
+    image1.copy = &copy;
+
+    //load NN
+    //size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
+    float w1[nbInput * nbHidden + nbHidden];
+    float w2[nbHidden * nbOutput + nbOutput];
+
+    //if file does not exist, uncomment, run and comment following lines
+    //Initialization(w1, w2, 0);
+    //SaveNetwork(w1, w2);
+    Initialization(w1, w2, 1);
+
+    char *textPointer = text;
+    char **textCur = &text;
+    int isText = (text)? 1 : 0;
+
+    image1 = Parse_Image(image1, textCur, w1, w2);
+
+    if(isText)
+    {
+        if(*textCur == NULL || **textCur != '\0')
+        {
+            printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
+            Initialization(w1, w2, 1);
+        }
+        else
+        {
+            SaveNetwork(w1, w2);
+            printf("Texte correspond !(ou pas de texte)\n\n");
+        }
+    }
+
+    return *(image1.copy);
+}
+
+Image cut(char *path, char *text)
+{
+    Image image1;
+    image1.data = NULL;
+    image1.copy = NULL;
+    load_image(path, &image1);
+    Image copy;
+    copy.data = NULL;
+    copy.copy = NULL;
+    CopyImage(image1, &copy);
+    image1.copy = &copy;
+
+    //load NN
+    //size_t nbInput = 256, nbHidden = 256, nbOutput = 72;
+    float w1[nbInput * nbHidden + nbHidden];
+    float w2[nbHidden * nbOutput + nbOutput];
+    Initialization(w1, w2, 0);
+
+
+    //SaveNetwork(w1, w2);
+    char *textPointer = text;
+    char **textCur = &text;
+    int isText = (text)? 1 : 0;
+    int i = 1;
+    do
+    {
+        if (i % 100 == 0) printf("%i\n", i);
+        *textCur = textPointer;
+        image1 = Parse_Image(image1, textCur, w1, w2);
+    } while(i++ < 1);
+
+
+    if(isText)
+    {
+        if(textCur)
+        {
+            if(*textCur == NULL || **textCur != '\0')
+                printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n\n");
+                // do not UPDATE weights
+            else
+            {
+                SaveNetwork(w1, w2);
+                printf("Texte correspond !\n\n");
+                // save weights
+            }
+        }
+        else
+            printf("Unknow error !\n");
+    }
+    else
+    {
+        printf("Pas de texte!\n\n");
+    }
+
+
+    return *(image1.copy);
 }
 
 Image Parse_Image2(Image image, ListHead *list)

@@ -115,8 +115,8 @@ void convert()
 	{
 		printf("File not found !\n filename=%s\n",filename);
 	}
-	char text[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789";
-	Image cutted = cut(filename, text);
+	char text[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789";
+	Image cutted = cut_new(filename, text, 1000);
 	char n[]="converted.bmp";
 	array_to_bmp(cutted.data, cutted.w, cutted.h, filename, n);
 	gtk_image_set_from_file(GTK_IMAGE(image_glo), n);
