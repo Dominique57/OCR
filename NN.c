@@ -10,18 +10,16 @@
 //Possible outputs
 //#define nbOutput 72
 
-const float eta = 0.025f;
+const float eta = 0.3f;
 
 const char chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()$0123456789";
 
 //Export/import
-/*
 typedef struct Network
 {
         float ws[nbInput*nbHidden*nbOutput];
 
 } Network;
-*/
 
 int FileExists(const char *fname)
 {
