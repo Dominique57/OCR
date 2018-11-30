@@ -20,4 +20,5 @@ Image Parse_Image(Image image, char **text, float *w1, float *w2);
 Image cut(char *path, char *text);
 Image cut_old(char *path, char *text);
 Image cut_new(char *path, char *text, int learnIterations);
+void CorrectRect(Image i, Rect *r);
 #endif
