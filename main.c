@@ -9,9 +9,11 @@
 //gcc `pkg-config gtk+-3.0 --cflags` *.c -o `pkg-config gtk+-3.0 --libs`
 
 
+GtkTextBuffer *NNOutputTest;
+GtkTextBuffer *NNOutputTrain;
+GtkImage *image_glo;
+GtkSpinButton *IterInput;
 
-GtkWidget *image_glo;
-GtkWidget *pathBtn;
 
 int toConvert=0;
 gchar *filename="icon.svg";
@@ -91,16 +93,28 @@ int test_resize()
 		return 0;
 }
 */
-
-
-void load()
+char *ReadOutput()
 {
-	filename=gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(pathBtn));
-	gtk_image_set_from_file(GTK_IMAGE(image_glo), filename);
-	//g_free(filename);
+	FILE *file=fopen("output.txt", "r");
+	if (file==NULL)
+		return NULL;
+	
+	fseek(file, 0, SEEK_END); //go to end
+	size_t size=ftell(file); //get size
+	rewind(file); //start again
+
+	char *output=malloc(size+1); //+1 for NULL byte
+
+	if(fread(output, 1, size, file)!=size)
+		printf("ReadOuput: Error reading file");
+
+	fclose(file);
+	output[size]='\0';
+	return output;
+
 }
 
-void convert()
+void convert(GtkImage *image_glo, int iterNbr, char *text)
 {
 	// Simon's testing
 	Image image;
@@ -115,70 +129,76 @@ void convert()
 	{
 		printf("File not found !\n filename=%s\n",filename);
 	}
-	char text[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789";
-	Image cutted = cut_new(filename, text, 1000);
+	//char text[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789";
+	
+	Image cutted = cut_new(filename, text, iterNbr);
 	char n[]="converted.bmp";
 	array_to_bmp(cutted.data, cutted.w, cutted.h, filename, n);
 	gtk_image_set_from_file(GTK_IMAGE(image_glo), n);
-	
 }
+
+
+void load_train_NN(GtkWidget *LoadBtn, GtkImage *image)
+{
+    filename=gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(LoadBtn));
+    gtk_image_set_from_file(GTK_IMAGE(image), filename);
+	image_glo=image;
+}
+
+
+void train_NN(GtkWidget *Btn, GtkTextBuffer *input_buffer)
+{
+	//get buffer start and end indexes
+	GtkTextIter start;
+    GtkTextIter end;
+	gtk_text_buffer_get_bounds(input_buffer, &start, &end);
+
+	//now we can get the text
+	char *text=gtk_text_buffer_get_text(input_buffer, &start, &end, FALSE);
+
+	//and the for iter number:
+	int iterNbr=gtk_spin_button_get_value_as_int(IterInput);
+	
+
+    convert(image_glo, iterNbr, text);
+	
+	text=ReadOutput();
+
+	gtk_text_buffer_set_text(NNOutputTrain, text, strlen(text));
+	free(text);
+
+}
+
+void test_NN(GtkWidget *Btn)
+{
+	convert(image_glo, 0, NULL);
+	char *text=ReadOutput();
+	gtk_text_buffer_set_text(NNOutputTest, text, strlen(text));
+	free(text);
+}
+
 
 int main(int argc, char *argv[])
 {
-	//Init window itself
-	GtkWidget *window;
-	GError **error=NULL;
-	
-	//Passing args from main to window
- 	gtk_init(&argc, &argv);
+    GtkWidget *window;
 
-	//Window properties
-	GdkPixbuf *icon=gdk_pixbuf_new_from_file("icon.svg", error);
-	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
- 	gtk_window_set_title(GTK_WINDOW(window), "OCR");
- 	gtk_window_set_default_size(GTK_WINDOW(window), 300, 200);
-	gtk_window_set_icon(GTK_WINDOW(window), icon);
+    gtk_init(&argc, &argv);
+    GtkBuilder *builder=gtk_builder_new();
 
-	//Creating box cointaining buttons and image
- 	GtkWidget* box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL,10);
-	GtkWidget* ibox = gtk_box_new(GTK_ORIENTATION_VERTICAL,10);
- 	gtk_container_add(GTK_CONTAINER(window),box);
-	
+    gtk_builder_add_from_file(builder, "OCRMenu.glade", NULL);
+    window=GTK_WIDGET(gtk_builder_get_object(builder, "window"));
+	NNOutputTest=GTK_TEXT_BUFFER(gtk_builder_get_object(builder, "Network_Output_2"));
+	NNOutputTrain=GTK_TEXT_BUFFER(gtk_builder_get_object(builder, "Network_Output"));
+	IterInput=GTK_SPIN_BUTTON(gtk_builder_get_object(builder, "IterInput"));
 
-	//init image choice
-	image_glo=gtk_image_new_from_file("icon.svg");
-	
-	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+    gtk_builder_connect_signals(builder, NULL);
 
-	//Creating buttons and adding them to the box
-	pathBtn = gtk_file_chooser_button_new (("Load image"),action);
+    //builder is now useless
+    g_object_unref(G_OBJECT(builder));
 
+    gtk_widget_show(window);
 
-	GtkWidget* convertBtn = gtk_button_new_with_label ("Convert");
- 	GtkWidget* leaveBtn = gtk_button_new_with_label ("Leave");
- 	
-	gtk_widget_set_valign(pathBtn, GTK_ALIGN_START);
-	gtk_widget_set_valign(convertBtn, GTK_ALIGN_START);
- 	gtk_widget_set_valign(leaveBtn, GTK_ALIGN_START);
- 	
-	gtk_container_add(GTK_CONTAINER (box), pathBtn);
-	gtk_container_add(GTK_CONTAINER (box), convertBtn);
- 	gtk_container_add(GTK_CONTAINER (box), leaveBtn);
-	gtk_container_add(GTK_CONTAINER (ibox), image_glo);
-	gtk_container_add(GTK_CONTAINER (box), ibox);
-	
-
-	//Rendering everything
- 	gtk_widget_show_all(window);
-
-	//Creating signals
- 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(leaveBtn, "clicked", G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(pathBtn, "file-set", G_CALLBACK(load), NULL);
-	g_signal_connect(convertBtn, "clicked", G_CALLBACK(convert), NULL);
-
-	//Running the window
- 	gtk_main();
- 	 
- 	return 0;
+    //Running the window
+    gtk_main();
+    return 0;
 }

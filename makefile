@@ -3,10 +3,10 @@ CFLAGS = -Wall -Wextra -std=c99
 all: OCR
 
 OCR: main.o Bmp_Parser.o cut.o resize.o NN.o List.o
-	gcc `pkg-config --cflags gtk+-3.0` *.o -o OCR `pkg-config --libs gtk+-3.0 ` -lm -lSDL2 -lSDL2_image
+	gcc `pkg-config --cflags gtk+-3.0` *.o -o OCR `pkg-config --libs gtk+-3.0 ` -lm -lSDL2 -lSDL2_image -rdynamic
 
 main.o: main.c
-	gcc -c main.c `pkg-config --cflags --libs gtk+-3.0`
+	gcc -c main.c `pkg-config --cflags --libs gtk+-3.0` -rdynamic
 
 Bmp_Parser.o: Bmp_Parser.c
 	gcc -c Bmp_Parser.c
