@@ -663,7 +663,7 @@ Image cut(char *path, char *text)
         if (i % 100 == 0) printf("%i\n", i);
         *textCur = textPointer;
         image1 = Parse_Image(image1, textCur, w1, w2);
-    } while(i++ < 1);
+    } while(i++ < 1000);
 
 
     if(isText)

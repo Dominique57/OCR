@@ -295,8 +295,6 @@ void CutChar2(Image image, Rect line, ListHead *list)
                 DrawRect_ver(charPos, *(image.copy), 2);
                 xl = x;
 
-                CorrectRect(image, &charPos);
-
                 ListChar *listChar = InitListChar();
                 listChar->type = 0;
                 CopyRect(charPos, &(listChar->pos));
@@ -309,30 +307,10 @@ void CutChar2(Image image, Rect line, ListHead *list)
         charPos.downRight.x = x - 1;
         DrawRect_ver(charPos, *(image.copy), 2);
 
-        CorrectRect(image, &charPos);
-
         ListChar *listChar = InitListChar();
         listChar->type = 0;
         CopyRect(charPos, &(listChar->pos));
         AddListChar(list, listChar);
-    }
-}
-
-void CorrectRect(Image i, Rect *r)
-{
-    int active = 1;
-    for (int y = r->downRight.y; y >= r->topLeft.y && active; --y)
-    {
-        for (int x = r->topLeft.x; x <= r->downRight.x; ++x)
-        {
-            int pos = y * i.w + x;
-            if(i.data[pos] == 1)
-            {
-                r->downRight.y = y;
-                active = 0;
-                break;
-            }
-        }
     }
 }
 
@@ -350,6 +328,20 @@ void CorrectRect(Image i, Rect *r)
 void CharProcess(Image i, Rect r, FILE *f, float *w1, float *w2, char **t)
 {
     // check if multiple caracters in the same rect
+    int active = 1;
+    for (int y = r.downRight.y; y >= r.topLeft.y && active; --y)
+    {
+        for (int x = r.topLeft.x; x <= r.downRight.x; ++x)
+        {
+            int pos = y * i.w + x;
+            if(i.data[pos] == 1)
+            {
+                r.downRight.y = y;
+                active = 0;
+                break;
+            }
+        }
+    }
     unsigned char resized[256];
     resize(i, r, resized);
     unsigned char carac = 0;
@@ -491,6 +483,20 @@ Image cut_new(char *path, char *text, int learningIteration)
     //Create List and fill it
     ListHead *listHead = InitListHead();
     Parse_Image2(image1, listHead);
+    ListHead *lightList = InitListHead();
+    ListChar *cur = listHead->head;
+    while(cur)
+    {
+        if(cur->type == 0)
+        {
+            ListChar *elt = InitListChar();
+            CopyRect(*(cur->pos), elt->pos);
+            AddListChar(lightList, elt);
+        }
+        cur = cur->next;
+    }
+    PrintListType(lightList);
+
 
     //if we want to learn, do the iterations
     char *textPointer = text;
@@ -514,8 +520,12 @@ Image cut_new(char *path, char *text, int learningIteration)
         {
             while(--learningIteration > 0)
             {
+                clock_t begin = clock();
                 *textCur = textPointer;
                 ReadList(image1, NULL, listHead, textCur, w1, w2);
+                clock_t end = clock();
+                double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+                printf("%lf\n", time_spent);
             }
             SaveNetwork(w1, w2);
         }
