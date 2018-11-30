@@ -10,7 +10,7 @@
 //Possible outputs
 //#define nbOutput 72
 
-const float eta = 0.3f;
+const float eta = 0.02f;
 
 const char chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789";
 
@@ -53,9 +53,9 @@ float Softmax(float x[], float out[])
 	return sum;
 }
 
-float SoftmaxDeriv(float x, float sum)
+float SoftmaxDeriv(float output)
 {
-	return (sum - x) * x / sum * sum;
+	return output * (1 - output);
 }
 
 
@@ -130,19 +130,31 @@ char Interpret(float output[])
 	return chars[max];
 }
 
-void ConvertChar(char letter, float target[])
+size_t GetIndex(char letter)
 {
 	for (size_t i = 0; i < nbOutput; i++) {
-		target[i] = (chars[i] == letter) ? 1 : 0;
+		if (chars[i] == letter)
+     return i;
 	}
+  return 0;
 }
 
-void Backpropagation(unsigned char m[], float w1[], float w2[], float output[], float target[], float outh[], float sumExp, float outexp[])
+float Error(float output, unsigned char derivate)
 {
-	for (size_t i = 0; i < nbOutput; i++) {
+  if (derivate == 1)
+    return -1.0f/output / nbOutput;
+  else
+    return -log(output + 1e-10) / nbOutput;
+
+}
+
+void Backpropagation(unsigned char m[], float w1[], float w2[], float output[], size_t target, float outh[], float sumExp, float outexp[])
+{
+  size_t i = target;
+	//for (size_t i = 0; i < nbOutput; i++) {
 
     //Update w2 biases
-		float deltab2 = eta * (output[i] - target[i]) * SoftmaxDeriv(outexp[i], sumExp);
+		float deltab2 = eta * Error(output[target], 1) * SoftmaxDeriv(output[i]);
 		w2[nbHidden * nbOutput + i] -= deltab2;
 
 		for (size_t j = 0; j < nbHidden; j++) {
@@ -163,7 +175,7 @@ void Backpropagation(unsigned char m[], float w1[], float w2[], float output[], 
 		}
 
 
-	}
+	//}
 }
 
 char Prediction(unsigned char m[], float w1[], float w2[], unsigned char letter)
@@ -216,8 +228,8 @@ char Prediction(unsigned char m[], float w1[], float w2[], unsigned char letter)
 	}
 	else
 	{
-		float target[nbOutput];
-		ConvertChar(letter, target);
+		size_t target = GetIndex(letter);
+    //printf("%f\n", Error(output[target], 0));
 		Backpropagation(m, w1, w2, output, target, outh, expSum, outexp);
 		return Interpret(output);
 	}
