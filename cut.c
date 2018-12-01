@@ -295,7 +295,7 @@ void CutChar2(Image image, Rect line, ListHead *list)
                 DrawRect_ver(charPos, *(image.copy), 2);
                 xl = x;
 
-                CorrectRect(image, &charPos);
+                // CorrectRect(image, &charPos);
 
                 ListChar *listChar = InitListChar();
                 listChar->type = 0;
@@ -309,7 +309,7 @@ void CutChar2(Image image, Rect line, ListHead *list)
         charPos.downRight.x = x - 1;
         DrawRect_ver(charPos, *(image.copy), 2);
 
-        CorrectRect(image, &charPos);
+        // CorrectRect(image, &charPos);
 
         ListChar *listChar = InitListChar();
         listChar->type = 0;
@@ -349,6 +349,20 @@ void CorrectRect(Image i, Rect *r)
  */
 void CharProcess(Image i, Rect r, FILE *f, float *w1, float *w2, char **t)
 {
+    int active = 1;
+    for (int y = r.downRight.y; y >= r.topLeft.y && active; --y)
+    {
+        for (int x = r.topLeft.x; x <= r.downRight.x; ++x)
+        {
+            int pos = y * i.w + x;
+            if(i.data[pos] == 1)
+            {
+                r.downRight.y = y;
+                active = 0;
+                break;
+            }
+        }
+    }
     // check if multiple caracters in the same rect
     unsigned char resized[256];
     resize(i, r, resized);
@@ -514,6 +528,8 @@ Image cut_new(char *path, char *text, int learningIteration)
         {
             while(--learningIteration > 0)
             {
+                if(learningIteration%100==0)
+                    printf("%i\n", learningIteration);
                 *textCur = textPointer;
                 ReadList(image1, NULL, listHead, textCur, w1, w2);
             }
@@ -521,8 +537,8 @@ Image cut_new(char *path, char *text, int learningIteration)
         }
 
     }
+    *textCur = textPointer;
     // note that after learning we do one execution to see the output
-
 
     //Create output file
     FILE *file = fopen("output.txt", "w+");
