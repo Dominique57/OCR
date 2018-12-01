@@ -30,12 +30,10 @@
     <property name="icon">icon.svg</property>
     <signal name="destroy" handler="gtk_main_quit" swapped="no"/>
     <child>
-      <placeholder/>
-    </child>
-    <child>
       <object class="GtkNotebook">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
+        <property name="scrollable">True</property>
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
@@ -79,10 +77,23 @@
               </packing>
             </child>
             <child>
-              <object class="GtkImage" id="imageTrain">
+              <object class="GtkExpander">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="pixbuf">icon.svg</property>
+                <property name="can_focus">True</property>
+                <child>
+                  <object class="GtkImage" id="imageTrain">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">icon.svg</property>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Image</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -248,10 +259,23 @@
               </packing>
             </child>
             <child>
-              <object class="GtkImage" id="ImageTest">
+              <object class="GtkExpander">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="pixbuf">icon.svg</property>
+                <property name="can_focus">True</property>
+                <child>
+                  <object class="GtkImage" id="ImageTest">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">icon.svg</property>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Image</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
