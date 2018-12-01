@@ -292,7 +292,7 @@ void CutChar2(Image image, Rect line, ListHead *list)
             {
                 active = 0;
                 charPos.downRight.x = x - 1;
-                DrawRect_ver(charPos, *(image.copy), 2);
+                DrawRect(charPos, *(image.copy), 2, 2);
                 xl = x;
 
                 // CorrectRect(image, &charPos);
@@ -307,7 +307,7 @@ void CutChar2(Image image, Rect line, ListHead *list)
     if(active)
     {
         charPos.downRight.x = x - 1;
-        DrawRect_ver(charPos, *(image.copy), 2);
+        DrawRect(charPos, *(image.copy), 2, 2);
 
         // CorrectRect(image, &charPos);
 
@@ -517,6 +517,10 @@ Image cut_new(char *path, char *text, int learningIteration)
         if(*textCur == NULL || **textCur != '\0')
         {
             printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n");
+            if(*textCur == NULL)
+                printf("Depassement du texte!\n");
+            else
+                printf("Texte non atteint la fin : '%c\n", **textCur);
         }
         else
         {
@@ -530,6 +534,11 @@ Image cut_new(char *path, char *text, int learningIteration)
             {
                 if(learningIteration%100==0)
                     printf("%i\n", learningIteration);
+                if(learningIteration%1000==0)
+                {
+                    SaveNetwork(w1, w2);
+                    printf("Network saved !\n");
+                }
                 *textCur = textPointer;
                 ReadList(image1, NULL, listHead, textCur, w1, w2);
             }
