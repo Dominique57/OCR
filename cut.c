@@ -382,7 +382,7 @@ void CharProcess(Image i, Rect r, FILE *f, float *w1, float *w2, char **t)
                 //printf("Associated car %c\n\n", carac);
                 *t = *t + 1;
             }
-        }while (carac == ' ');
+        }while (carac == ' ' || carac == '\n');
 
     }
     char output = Prediction(resized, w1, w2, carac);
