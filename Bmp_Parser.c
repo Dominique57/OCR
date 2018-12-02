@@ -171,17 +171,11 @@ int array_to_bmp(unsigned char *arr, size_t w, size_t h, char path[], char *n)
             pixel=(uint8_t *)image->pixels
                   + i * image->pitch
                   + j*image->format->BytesPerPixel;
-            toPut = (arr[k] == 1)? 0 : 255;
+            toPut = (arr[k] == 1 || arr[k] == 2)? 0 : 255;
             pixel[0]=toPut;
             pixel[1]=toPut;
             pixel[2]=toPut;
-            if ( arr[k] == 2)
-            {
-                pixel[0]=255;
-                pixel[1]=0;
-                pixel[2]=0;
-            }
-            else if ( arr[k] == 3)
+            if ( arr[k] == 3)
             {
                 pixel[0]=0;
                 pixel[1]=0;
@@ -191,6 +185,12 @@ int array_to_bmp(unsigned char *arr, size_t w, size_t h, char path[], char *n)
             {
                 pixel[0]=0;
                 pixel[1]=255;
+                pixel[2]=0;
+            }
+            else if ( arr[k] == 5)
+            {
+                pixel[0]=255;
+                pixel[1]=0;
                 pixel[2]=0;
             }
             k++;

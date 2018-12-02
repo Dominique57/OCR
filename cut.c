@@ -168,7 +168,7 @@ void CopyImage(Image image, Image *dest)
     if(dest->data)
         free(dest->data);
 
-    dest->data = malloc(arrSize * sizeof(unsigned char));
+    dest->data = malloc(image.h * image.w * sizeof(unsigned char));
     if(dest->data == NULL)
     {
         printf("No free memory availble ! Image copy impossible !\n");
@@ -186,12 +186,18 @@ void CopyImage(Image image, Image *dest)
  * param :
  *      image : image to free
  */
-void FreeImage(Image image)
+void FreeImage(Image *image)
 {
-    if(image.data)
-        free(image.data);
-    if(image.copy)
-        FreeImage(*(image.copy));
+    if(image->data)
+    {
+        free(image->data);
+        image->data = NULL;
+    }
+    if(image->copy)
+    {
+        FreeImage(image->copy);
+        image->copy = NULL;
+    }
 }
 
 void cutLine2(Image image, Rect rect, ListHead *list)
@@ -223,7 +229,7 @@ void cutLine2(Image image, Rect rect, ListHead *list)
             inrect.downRight.y = y - 1; //downright est exclus, pas y-1
             DrawRect_hor(inrect, *(image.copy), 4);
 
-            CutChar2(image, inrect, list);
+            CutChar3(image, inrect, list);
             ListChar *listChar = InitListChar();
             listChar->type = 2;
             CopyRect(inrect, &(listChar->pos));
@@ -235,11 +241,203 @@ void cutLine2(Image image, Rect rect, ListHead *list)
         inrect.downRight.y = y - 1; //downright est exclus, pas y-1
         DrawRect_hor(inrect, *(image.copy), 4);
 
-        CutChar2(image, inrect, list);
+        CutChar3(image, inrect, list);
         ListChar *listChar = InitListChar();
         listChar->type = 2;
         CopyRect(inrect, &(listChar->pos));
         AddListChar(list, listChar);
+    }
+}
+
+void CutChar3(Image image, Rect line, ListHead *list)
+{
+    int x = line.topLeft.x;
+    int y = line.topLeft.y;
+    NextCall(*(image.copy->copy), line, &x, &y);
+    while(x != -1 /* && y != -1 */)
+    {
+        Rect charPos;
+        charPos.topLeft.x = x;
+        charPos.topLeft.y = y;
+        charPos.downRight.x = x;
+        charPos.downRight.y = y;
+        CutCharRec(*(image.copy->copy), line, &charPos, y, x);
+        ListChar *listChar = InitListChar();
+
+        listChar->type = 0;
+        CopyRect(charPos, &(listChar->pos));
+        listChar->pos.topLeft.y = line.topLeft.y;
+        int Hline = line.downRight.y-line.topLeft.y;
+        int Hchar = listChar->pos.downRight.y - listChar->pos.topLeft.y;
+        if(Hchar < Hline/2)
+            listChar->pos.downRight.y = listChar->pos.topLeft.y+Hline/2;
+        AddListChar(list, listChar);
+        CheckElement(list);
+
+        NextCall(*(image.copy->copy), line, &x, &y);
+    }
+    ListChar *cur = list->tail;
+    while (cur != NULL && (cur->type == 0 || cur->type == 1))
+    {
+        DrawRect(cur->pos, *(image.copy), 5, 5);
+        cur = cur->prev;
+    }
+    AddSpace(list, image.copy);
+}
+
+void AddSpace(ListHead *list, Image *image)
+{
+    unsigned long spaceCount = 0;
+    unsigned long elCount = 0;
+    ListChar *cur = list->tail;
+    if(cur != NULL && cur->type != 2)
+    {
+        //calculate all data
+        while(cur->prev && cur->prev->type == 0)
+        {
+            ListChar *prev = cur->prev;
+            int length = cur->pos.topLeft.x - prev->pos.downRight.x;
+            if(cur->pos.topLeft.x > prev->pos.downRight.x&& length > 0)
+            {
+                spaceCount += length;
+            }
+            elCount++;
+            cur = prev;
+        }
+        unsigned long th = (elCount == 0)? 0 : spaceCount / elCount;
+        th *= 2;
+        while (cur->next && cur->next->type != 2)
+        {
+            ListChar *next = cur->next;
+            int isNotRiding = next->pos.topLeft.x > cur->pos.downRight.x;
+            int length = next->pos.topLeft.x - cur->pos.downRight.x;
+            if(isNotRiding && length > th)
+            {
+                ListChar *space = InitListChar();
+                space->type = 1;
+                cur->next = space;
+                space->prev = cur;
+                space->next = next;
+                next->prev = space;
+
+                space->pos.topLeft.x = cur->pos.downRight.x;
+                space->pos.downRight.x = next->pos.topLeft.x;
+                space->pos.topLeft.y = cur->pos.topLeft.y;
+                space->pos.downRight.y = cur->pos.downRight.y;
+                if(image)
+                {
+                    DrawRect(space->pos, *image, 3, 3);
+                }
+            }
+            cur = next;
+        }
+    }
+}
+
+void CheckElement(ListHead *list)
+{
+    if(!IsEmpty(list))
+    {
+        ListChar *elt1 = list->tail;
+        if (elt1 && elt1->type == 0)
+        {
+            ListChar *elt2 = elt1->prev;
+            if (elt2 && elt2->type == 0)
+            {
+                int xlelt1 = elt1->pos.topLeft.x;
+                int xrelt1 = elt1->pos.downRight.x;
+                int xlelt2 = elt2->pos.topLeft.x;
+                int xrelt2 = elt2->pos.downRight.x;
+                int okElt1 = (xrelt1 - xlelt1 < 9) ? 1 : (xrelt1 - xlelt1) / 9;
+                int okElt2 = (xrelt2 - xlelt2 < 9) ? 1 : (xrelt2 - xlelt2) / 9;
+                if (xlelt1 + okElt1 >= xlelt2 && xrelt1 - okElt1 <= xrelt2)
+                {
+                    elt2->next = NULL;
+                    list->tail = elt2;
+                    if (elt1->pos.downRight.y > elt2->pos.downRight.y)
+                        elt2->pos.downRight.y = elt1->pos.downRight.y;
+                    if (elt1->pos.topLeft.x < elt2->pos.topLeft.x)
+                        elt2->pos.topLeft.x = elt1->pos.topLeft.x;
+                    if (elt1->pos.downRight.x > elt2->pos.downRight.x)
+                        elt2->pos.downRight.x = elt1->pos.downRight.x;
+                    FreeListChar(elt1);
+                }
+                else if (xlelt1 - okElt2 <= xlelt2 && xrelt1 - okElt2 >= xrelt2)
+                {
+                    if (elt2->pos.downRight.y > elt1->pos.downRight.y)
+                        elt1->pos.downRight.y = elt2->pos.downRight.y;
+                    if (elt1->pos.topLeft.x > elt2->pos.topLeft.x)
+                        elt1->pos.topLeft.x = elt2->pos.topLeft.x;
+                    if (elt1->pos.downRight.x < elt2->pos.downRight.x)
+                        elt1->pos.downRight.x = elt2->pos.downRight.x;
+
+                    elt2->type = elt1->type;
+                    CopyRect(elt1->pos, &(elt2->pos));
+                    elt2->next = NULL;
+                    list->tail = elt2;
+
+                    FreeListChar(elt1);
+                    /*
+                    somheow doesnt work
+                    elt1->prev = elt2->prev;
+                    if (elt2->prev)
+                        elt2->prev = elt1;
+
+                    /*
+                    FreeListChar(elt2);
+                     */
+                }
+            }
+        }
+    }
+}
+
+void NextCall(Image image, Rect line, int *xref, int *yref)
+{
+    int x = line.topLeft.x;
+    for (; x <= line.downRight.x; ++x)
+    {
+        int y = line.topLeft.y;
+        for (; y <= line.downRight.y; ++y)
+        {
+            int pos = y * image.w + x;
+            if(image.data[pos] == 1)
+            {
+                *xref = x;
+                *yref = y;
+                return;
+            }
+        }
+    }
+    *xref = -1;
+    *yref = -1;
+}
+
+void CutCharRec(Image image, Rect line, Rect *rect, int y, int x)
+{
+    int a = y <= line.downRight.y;
+    int b = y >= line.topLeft.y;
+    int c = x >= line.topLeft.x;
+    int d = x <= line.downRight.x;
+    if( a && b && c && d && image.data[y*image.w+x] == 1)
+    {
+        if (x > rect->downRight.x)
+            rect->downRight.x = x;
+        else if (x < rect->topLeft.x)
+            rect->topLeft.x = x;
+        if (y > rect->downRight.y)
+            rect->downRight.y = y;
+        else if (y < rect->topLeft.y)
+            rect->topLeft.y = y;
+        image.data[y*image.w+x] = 2;
+        CutCharRec(image, line, rect, y-1, x-1);
+        CutCharRec(image, line, rect, y-1, x);
+        CutCharRec(image, line, rect, y-1, x+1);
+        CutCharRec(image, line, rect, y, x-1);
+        CutCharRec(image, line, rect, y, x+1);
+        CutCharRec(image, line, rect, y+1, x-1);
+        CutCharRec(image, line, rect, y+1, x);
+        CutCharRec(image, line, rect, y+1, x+1);
     }
 }
 
@@ -292,7 +490,7 @@ void CutChar2(Image image, Rect line, ListHead *list)
             {
                 active = 0;
                 charPos.downRight.x = x - 1;
-                DrawRect(charPos, *(image.copy), 2, 2);
+                DrawRect(charPos, *(image.copy), 5, 5);
                 xl = x;
 
                 // CorrectRect(image, &charPos);
@@ -307,7 +505,7 @@ void CutChar2(Image image, Rect line, ListHead *list)
     if(active)
     {
         charPos.downRight.x = x - 1;
-        DrawRect(charPos, *(image.copy), 2, 2);
+        DrawRect(charPos, *(image.copy), 5, 5);
 
         // CorrectRect(image, &charPos);
 
@@ -464,7 +662,7 @@ void ReadList(Image i, FILE *f, ListHead *l, char **t, float *w1, float *w2)
     if(IsEmpty(l))
         return;
     ListChar *cur = l->head;
-    while(cur)
+    while(cur != l->tail)
     {
         if(cur->type == 0)
             // char
@@ -491,6 +689,11 @@ Image cut_new(char *path, char *text, int learningIteration)
     copy.copy = NULL;
     CopyImage(image1, &copy);
     image1.copy = &copy;
+    Image copy2;
+    copy2.data = NULL;
+    copy2.copy = NULL;
+    CopyImage(image1, &copy2);
+    copy.copy = &copy2;
 
     //load NN
     float w1[nbInput * nbHidden + nbHidden];
@@ -561,6 +764,5 @@ Image cut_new(char *path, char *text, int learningIteration)
 
     //free list
     FreeList(listHead);
-
     return *(image1.copy);
 }

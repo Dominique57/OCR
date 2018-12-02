@@ -6,7 +6,7 @@
 
 Rect CutBorder(Image image);
 void CopyImage(Image image, Image *destination);
-void FreeImage(Image image);
+void FreeImage(Image *image);
 void cutLine(Image image, Rect rect, FILE *f, float *w1, float *w2, char **text);
 void cutLine2(Image image, Rect rect, ListHead *list);
 void CutChar(Image image, Rect line, FILE *f, float *w1, float *w2, char **text);
@@ -21,4 +21,9 @@ Image cut(char *path, char *text);
 Image cut_old(char *path, char *text);
 Image cut_new(char *path, char *text, int learnIterations);
 void CorrectRect(Image i, Rect *r);
+void CutChar3(Image image, Rect line, ListHead *list);
+void NextCall(Image image, Rect line, int *xref, int *yref);
+void CutCharRec(Image image, Rect line, Rect *rect, int y, int x);
+void CheckElement(ListHead *list);
+void AddSpace(ListHead *list, Image *image);
 #endif

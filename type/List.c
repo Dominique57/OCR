@@ -47,7 +47,7 @@ void FreeListChar(ListChar *list)
 ListChar *InitListChar()
 {
 	ListChar *p;
-	p = malloc(sizeof(ListChar));
+	p = calloc(1, sizeof(ListChar));
 	if(!p)
 		return NULL;
 	p->next = NULL;
