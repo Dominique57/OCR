@@ -179,7 +179,7 @@ void train_NN(GtkWidget *Btn, GtkTextBuffer *input_buffer)
 
 void test_NN(GtkWidget *Btn)
 {
-	convert(image_glo, 0, NULL, 0, 0);
+	convert(image_glo, 0, NULL, 0, 1);
 	char *text=ReadOutput();
 	gtk_text_buffer_set_text(NNOutputTest, text, strlen(text));
 	free(text);
