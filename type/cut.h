@@ -26,4 +26,11 @@ void NextCall(Image image, Rect line, int *xref, int *yref);
 void CutCharRec(Image image, Rect line, Rect *rect, int y, int x);
 void CheckElement(ListHead *list);
 void AddSpace(ListHead *list, Image *image);
+
+Image *InitImage();
+void LoadImageData(ListHead *list);
+void CharProcessNoAi(Image i, Rect r, FILE *f, ListHead *db);
+void ReadListNoAi(Image i, FILE *f, ListHead *l, ListHead *db);
+Image cut_noAI(char *path);
+void LoadImageElt(ListHead *list, char *path, char carac);
 #endif

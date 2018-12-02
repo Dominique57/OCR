@@ -30,8 +30,8 @@ struct ListChar
 typedef struct ListHead ListHead;
 struct ListHead
 {
-	ListChar *head;
-	ListChar *tail;
+	void *head;
+	void *tail;
 };
 
 typedef struct Image Image;
@@ -43,6 +43,15 @@ struct Image
     Image* copy;
 };
 
+typedef struct ListImage ListImage;
+struct ListImage
+{
+	ListImage *prev;
+	ListImage *next;
+	Image *image;
+	char carac;
+};
+
 
 void AddListChar(ListHead *list, ListChar *elt);
 int IsEmpty(ListHead *list);
@@ -52,5 +61,8 @@ void FreeList(ListHead *list);
 ListHead *InitListHead();
 void PrintListType(ListHead *list);
 void CopyRect(Rect src, Rect *dst);
-
+ListImage *InitListImage();
+void AddListImage(ListHead *list, ListImage *image);
+void FreeListImage(ListImage *listImage);
+void FreeListHeadImage(ListHead *list);
 #endif

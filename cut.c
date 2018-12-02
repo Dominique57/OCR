@@ -645,7 +645,6 @@ void CharProcess(Image i, Rect r, FILE *f, float *w1, float *w2, char **t)
                 *t = *t + 1;
             }
         }while (carac == ' ' || carac == '\n');
-        array_to_bmp(resized, 16, 16, "dataset/blank.bmp", NULL);
 
     }
     char output = Prediction(resized, w1, w2, carac);
@@ -772,6 +771,9 @@ Image cut_new(char *path, char *text, int learningIteration)
     //Create List and fill it
     ListHead *listHead = InitListHead();
     Parse_Image2(image1, listHead);
+
+
+    printf("Parse done\n");
 
     //if we want to learn, do the iterations
     char *textPointer = text;

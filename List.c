@@ -35,7 +35,7 @@ ListHead *InitListHead()
 	if(!p)
 		return NULL;
 	p->head = NULL;
-
+	p->tail = NULL;
 }
 
 void FreeList(ListHead *list)
@@ -92,4 +92,48 @@ void AddListChar(ListHead *list, ListChar *elt)
 	}
 }
 
+ListImage *InitListImage()
+{
+	ListImage *p = NULL;
+	p = malloc(sizeof(ListImage));
+	if(!p)
+		return NULL;
+	p->prev = NULL;
+	p->next = NULL;
+	p->image = NULL;
+	p->carac = 0;
+}
 
+void AddListImage(ListHead *list, ListImage *image)
+{
+	if(IsEmpty(list))
+	{
+		list->head = image;
+		list->tail = image;
+	}
+	else
+	{
+		ListImage *last = list->tail;
+		last->next = image;
+		image->prev = last->next;
+		list->tail = image;
+	}
+}
+
+void FreeListImage(ListImage *listImage)
+{
+	free(listImage->image);
+	free(listImage);
+}
+
+void FreeListHeadImage(ListHead *list)
+{
+	ListImage *cur = list->head;
+	while(cur)
+	{
+		ListImage    *next = cur->next;
+		FreeListImage(cur);
+		cur = next;
+	}
+	free(list);
+}
