@@ -9,7 +9,6 @@
 #include <sys/time.h>
 
 
-
 /*
  * determines the average space between caracters of a line
  * param :

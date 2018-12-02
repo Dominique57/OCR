@@ -2,10 +2,6 @@
 #include <SDL2/SDL_image.h>
 #include "type/image.h"
 
-/*
-Compile with gcc -Wall -Wextra -std=c99 -lSDL2 -lSDL2_image
-*/
-
 SDL_Surface *image=NULL; //surface initialization
 
 struct Pixel { //pixel structure
@@ -69,7 +65,6 @@ int get_color_array_otsu
             float g = 0.587*pix.g;
             float b = 0.114*pix.b;
             final_array[k] = (unsigned long)r+g+b;
-            //final_array[k] = ( pix.r + pix.g + pix.b ) / 3; //(r+g+b)/3
             sum += final_array[k];
             k++;
         }
@@ -81,12 +76,10 @@ int get_color_array_otsu
         for (size_t j=0; j<w; j++)
         {
             pix=get_color(image, j, i);
-            //(r+g+b)/3
             float r = 0.299*pix.r;
             float g = 0.587*pix.g;
             float b = 0.114*pix.b;
             float average = r+g+b;
-            //float average=((float)pix.r+(float)pix.g+(float)pix.b)/(float)3;
 
             final_array[k]=average<thresold;
 
@@ -138,6 +131,7 @@ int parse_bmp(unsigned char *final_array, char path[])
     SDL_FreeSurface(image); //cleanup
     return 0;
 }
+
 int load_image(char path[], Image *image)
 {
     (*image).h = getHeight(path);

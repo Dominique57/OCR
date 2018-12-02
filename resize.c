@@ -3,7 +3,8 @@
 
 
 
-void print_array(unsigned char *array, size_t w, size_t h, unsigned char name[])
+void print_array(unsigned char *array, size_t w, size_t h,
+		unsigned char name[])
         //prints all values from an array
 {
 	printf("Array : %s\n", name);
@@ -20,8 +21,8 @@ void print_array(unsigned char *array, size_t w, size_t h, unsigned char name[])
 	}
 }
 
-
-int resize_mat_nearest_neighbours(unsigned char resizedMat[256], unsigned char baseLetter[], int xlen, int ylen)
+int resize_mat_nearest_neighbours(unsigned char resizedMat[256],
+		unsigned char baseLetter[], int xlen, int ylen)
 {
 	int maxlen=xlen;
 	if (xlen<=0 || ylen<=0)
@@ -52,7 +53,8 @@ int resize_mat_nearest_neighbours(unsigned char resizedMat[256], unsigned char b
 	//print_array(posRows, 16, 1, "posRows");
 	//print_array(posCols, 16, 1, "posCols");
 	//print_array(baseLetter, xlen, ylen, "baseLetter");
-	//printf("rowsRatio: %f; colsRatio:%f; 5/rowsRatio:%f; xlen:%i; ylen:%i\n", rowsRatio, colsRatio, 5/rowsRatio, xlen, ylen);
+	//printf("rowsRatio: %f; colsRatio:%f; 5/rowsRatio:%f;
+	// xlen:%i; ylen:%i\n", rowsRatio, colsRatio, 5/rowsRatio, xlen, ylen);
 
 	unsigned char tmp_value=0;
 	size_t tmp_i=0;
@@ -100,8 +102,6 @@ int resize_mat_nearest_neighbours(unsigned char resizedMat[256], unsigned char b
 
 	return 0;
 }
-
-
 
 void resize(Image image, Rect rect, unsigned char resizedMat[256])
 {

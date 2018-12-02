@@ -8,7 +8,6 @@
 
 //gcc `pkg-config gtk+-3.0 --cflags` *.c -o `pkg-config gtk+-3.0 --libs`
 
-
 GtkTextBuffer *NNOutputTest;
 GtkTextBuffer *NNOutputTrain;
 GtkImage *image_glo;
@@ -115,7 +114,8 @@ char *ReadOutput()
 
 }
 
-void convert(GtkImage *image_glo, int iterNbr, char *text, int useAlgo, int loadSaved)
+void convert(GtkImage *image_glo, int iterNbr,
+		char *text, int useAlgo, int loadSaved)
 {
 	// Simon's testing
 	Image image;
@@ -130,7 +130,6 @@ void convert(GtkImage *image_glo, int iterNbr, char *text, int useAlgo, int load
 	{
 		printf("File not found !\n filename=%s\n",filename);
 	}
-	//char text[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789";
 	Image cutted;
 	if (useAlgo)
 	{
@@ -203,11 +202,16 @@ int main(int argc, char *argv[])
     GtkBuilder *builder=gtk_builder_new();
 
     gtk_builder_add_from_file(builder, "OCRMenu.glade", NULL);
-    window=GTK_WIDGET(gtk_builder_get_object(builder, "window"));
-	NNOutputTest=GTK_TEXT_BUFFER(gtk_builder_get_object(builder, "Network_Output_2"));
-	NNOutputTrain=GTK_TEXT_BUFFER(gtk_builder_get_object(builder, "Network_Output"));
-	IterInput=GTK_SPIN_BUTTON(gtk_builder_get_object(builder, "IterInput"));
-	sw=GTK_SWITCH(gtk_builder_get_object(builder, "loadSaved"));
+    window=GTK_WIDGET(
+    		gtk_builder_get_object(builder, "window"));
+	NNOutputTest=GTK_TEXT_BUFFER(
+			gtk_builder_get_object(builder, "Network_Output_2"));
+	NNOutputTrain=GTK_TEXT_BUFFER(
+			gtk_builder_get_object(builder, "Network_Output"));
+	IterInput=GTK_SPIN_BUTTON(
+			gtk_builder_get_object(builder, "IterInput"));
+	sw=GTK_SWITCH(
+			gtk_builder_get_object(builder, "loadSaved"));
 
     gtk_builder_connect_signals(builder, NULL);
 
