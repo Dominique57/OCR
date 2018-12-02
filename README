@@ -1,31 +1,36 @@
-Project : Processing an image, extracting its text and write in under a more useful form
 
-S3 Project by SUP A1
+							S3 Project by SUP A1
+
+
+Optical Character Recognition program by C2 students:	Sander Julien Saint-Amant
+							Simon Guiot
+							Dominique Michel
+							Lea Masselles
+				  
+The OCR can process an image, decrypting its text and write it under actual text form
 
 
 Command to compile : 	make
 Command to clean :	make clean
 
 
-
-				The project
 Command to launch : 	./OCR
+			Will launch the graphic interface
 
 
+Graphic interface :	On top on the OCR window are three tabs : Test neural network
+								  Train neural network
+								  About
 
-				Step by step
+	*Test neural network : 	choose an image with the button on top of the window 
+			       	launch the OCR by clicking on "Get text(neural network)" button
+			       	possible to use another method by clicking on "Get text(algorithm)" button
+			       	will print the output under the image
 
-Image Processing : 	Binarize the image to process
+	*Train neural network : choose an image with the button on top of the window
+				choose the number of iterations to train the OCR
+				choose if you want to use an already existing neural network
+				write the text on the image in "Write desired output below"
+				click on "Launch training" button
 
-
-
-Segmenting : 		Launch by clicking on the convert button
-			Draw lines 
-			Draw a rectangle around each letter
-	      
-
-
-Neural Network :	Launch with ./Xor n, 1 <= n <= 2
-
-
-GUI :			Button to : choose a file, launch segmenting, exit	
+	*About :		show informations about our group
