@@ -19,7 +19,7 @@ int GetLineThresold(Image image, Rect line);
 Image Parse_Image(Image image, char **text, float *w1, float *w2);
 Image cut(char *path, char *text);
 Image cut_old(char *path, char *text);
-Image cut_new(char *path, char *text, int learnIterations);
+Image cut_new(char *path, char *text, int learnIterations, int loadsaved);
 void CorrectRect(Image i, Rect *r);
 void CutChar3(Image image, Rect line, ListHead *list);
 void NextCall(Image image, Rect line, int *xref, int *yref);

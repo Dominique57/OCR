@@ -741,7 +741,7 @@ void ReadList(Image i, FILE *f, ListHead *l, char **t, float *w1, float *w2)
     }
 }
 
-Image cut_new(char *path, char *text, int learningIteration)
+Image cut_new(char *path, char *text, int learningIteration, int loadsaved)
 {
     //Load image and a copy
     Image image1;
@@ -766,7 +766,7 @@ Image cut_new(char *path, char *text, int learningIteration)
     //if file does not exist, uncomment, run and comment following lines
     //Initialization(w1, w2, 0);
     //SaveNetwork(w1, w2);
-    Initialization(w1, w2, 1);
+    Initialization(w1, w2, loadsaved);
 
     //Create List and fill it
     ListHead *listHead = InitListHead();

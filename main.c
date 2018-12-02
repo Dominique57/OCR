@@ -13,6 +13,7 @@ GtkTextBuffer *NNOutputTest;
 GtkTextBuffer *NNOutputTrain;
 GtkImage *image_glo;
 GtkSpinButton *IterInput;
+GtkSwitch *sw;
 
 
 int toConvert=0;
@@ -114,7 +115,7 @@ char *ReadOutput()
 
 }
 
-void convert(GtkImage *image_glo, int iterNbr, char *text, int useAlgo)
+void convert(GtkImage *image_glo, int iterNbr, char *text, int useAlgo, int loadSaved)
 {
 	// Simon's testing
 	Image image;
@@ -137,7 +138,7 @@ void convert(GtkImage *image_glo, int iterNbr, char *text, int useAlgo)
 	}
 	else
 	{
-		cutted = cut_new(filename, text, iterNbr);
+		cutted = cut_new(filename, text, iterNbr, loadSaved);
 	}
 	char n[]="converted.bmp";
 	array_to_bmp(cutted.data, cutted.w, cutted.h, filename, n);
@@ -166,8 +167,8 @@ void train_NN(GtkWidget *Btn, GtkTextBuffer *input_buffer)
 	//and the for iter number:
 	int iterNbr=gtk_spin_button_get_value_as_int(IterInput);
 	
-
-    convert(image_glo, iterNbr, text, 0);
+	int loadsaved=gtk_switch_get_state(sw);
+    convert(image_glo, iterNbr, text, 0, loadsaved);
 	
 	text=ReadOutput();
 
@@ -178,15 +179,16 @@ void train_NN(GtkWidget *Btn, GtkTextBuffer *input_buffer)
 
 void test_NN(GtkWidget *Btn)
 {
-	convert(image_glo, 0, NULL, 0);
+	convert(image_glo, 0, NULL, 0, 0);
 	char *text=ReadOutput();
 	gtk_text_buffer_set_text(NNOutputTest, text, strlen(text));
 	free(text);
 }
 
+
 void test_NN_algo(GtkWidget *Btn)
 {
-	convert(image_glo, 0, NULL, 1);
+	convert(image_glo, 0, NULL, 1, 0);
 	char *text=ReadOutput();
 	gtk_text_buffer_set_text(NNOutputTest, text, strlen(text));
 	free(text);
@@ -205,6 +207,7 @@ int main(int argc, char *argv[])
 	NNOutputTest=GTK_TEXT_BUFFER(gtk_builder_get_object(builder, "Network_Output_2"));
 	NNOutputTrain=GTK_TEXT_BUFFER(gtk_builder_get_object(builder, "Network_Output"));
 	IterInput=GTK_SPIN_BUTTON(gtk_builder_get_object(builder, "IterInput"));
+	sw=GTK_SWITCH(gtk_builder_get_object(builder, "loadSaved"));
 
     gtk_builder_connect_signals(builder, NULL);
 
