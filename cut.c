@@ -201,6 +201,67 @@ void FreeImage(Image *image)
     }
 }
 
+Image *InitImage()
+{
+    Image *p = malloc(sizeof(Image));
+    if(!p)
+        return NULL;
+    p->w = 0;
+    p->h = 0;
+    p->data = NULL;
+    p->copy= NULL;
+    return p;
+}
+
+void LoadImageData(ListHead *list)
+{
+    char carac = 'a';
+    char path[] = "letters/normal/a.bmp";
+    while(carac <= 'z')
+    {
+        path[15] = carac;
+        LoadImageElt(list, path, carac);
+        carac++;
+    }
+    carac = 'a';
+    char path2[] = "letters/normal/caps-a.bmp";
+    while(carac <= 'z')
+    {
+        path2[20] = carac;
+        LoadImageElt(list, path2, 'A' + carac - 'a');
+        carac++;
+    }
+    carac = '0';
+    char path3[] = "letters/normal/0.bmp";
+    while(carac <= '9')
+    {
+        path3[15] = carac;
+        LoadImageElt(list, path3, carac);
+        carac++;
+    }
+    /*
+    ListImage *cur = list->head;
+    while(cur)
+    {
+        print_Array(cur->image->data, 16, 16);
+        cur = cur->next;
+    }
+     */
+}
+
+void LoadImageElt(ListHead *list, char *path, char carac)
+{
+    ListImage *listImage = InitListImage();
+    Image *image = InitImage();
+    listImage->image = image;
+    listImage->carac = carac;
+    load_image(path, image);
+    if(image->data)
+        AddListImage(list, listImage);
+    else
+        FreeListImage(listImage);
+}
+
 void cutLine2(Image image, Rect rect, ListHead *list)
 {
     int active = 0;
@@ -306,7 +367,7 @@ void AddSpace(ListHead *list, Image *image)
             cur = prev;
         }
         unsigned long th = (elCount == 0)? 0 : spaceCount / elCount;
-        th *= 2;
+        th *= 1.8;
         while (cur->next && cur->next->type != 2)
         {
             ListChar *next = cur->next;
@@ -666,7 +727,7 @@ void ReadList(Image i, FILE *f, ListHead *l, char **t, float *w1, float *w2)
     if(IsEmpty(l))
         return;
     ListChar *cur = l->head;
-    while(cur != l->tail)
+    while(cur)
     {
         if(cur->type == 0)
             // char
@@ -707,7 +768,6 @@ Image cut_new(char *path, char *text, int learningIteration)
     //Initialization(w1, w2, 0);
     //SaveNetwork(w1, w2);
     Initialization(w1, w2, 1);
-
 
     //Create List and fill it
     ListHead *listHead = InitListHead();
@@ -764,6 +824,124 @@ Image cut_new(char *path, char *text, int learningIteration)
     // fill output with data from LIST
     text = NULL;
     ReadList(image1, file, listHead, &text, w1, w2);
+    fclose(file);
+
+    //free list
+    FreeList(listHead);
+    return *(image1.copy);
+}
+
+void CharProcessNoAi(Image i, Rect r, FILE *f, ListHead *db)
+{
+    unsigned char resized[256];
+    resize(i, r, resized);
+    unsigned char carac = 0;
+    long ratio = -512;
+    ListImage *cur = db->head;
+
+    //print_Array(resized, 16, 16);
+
+    ListImage *choosen = NULL;
+    while(cur)
+    {
+
+        size_t pos = 0;
+        long curRatio = 0;
+        int ybegin = 0;
+        int xbegin = 0;
+        if(cur->carac == 'l' || cur->carac == 'I')
+        {
+            xbegin = 3;
+            ybegin = 13;
+        }
+        if(cur->carac == 'i')
+        {
+            xbegin = 2;
+            ybegin = 14;
+        }
+        for (int y = ybegin; y < 16; ++y)
+        {
+            for (int x = xbegin; x < 16; ++x)
+            {
+                int imOk = cur->image->data[pos];
+                int resOk = resized[pos];
+                if (imOk && resOk)
+                    curRatio++;
+                else if(imOk || resOk)
+                    curRatio--;
+                pos++;
+            }
+        }
+        if (curRatio > ratio)
+        {
+            ratio = curRatio;
+            carac = cur->carac;
+            choosen = cur;
+        }
+        cur = cur->next;
+    }
+    if(choosen)
+        //print_Array(choosen->image->data, 16, 16);
+    if(carac)
+        fputc(carac, f);
+    else
+        fputc('?', f);
+}
+
+void ReadListNoAi(Image i, FILE *f, ListHead *l, ListHead *db)
+{
+    if(IsEmpty(l))
+        return;
+    ListChar *cur = l->head;
+    while(cur != l->tail)
+    {
+        if(cur->type == 0)
+            // char
+            CharProcessNoAi(i, cur->pos, f, db);
+        else if(cur->type == 1)
+            // space
+            fputc(' ', f);
+        else if(cur->type == 2)
+            // end of line
+            fputc('\n', f);
+        cur = cur->next;
+    }
+}
+
+Image cut_noAI(char *path)
+{
+    //Load image and a copy
+    Image image1;
+    image1.data = NULL;
+    image1.copy = NULL;
+    load_image(path, &image1);
+    Image copy;
+    copy.data = NULL;
+    copy.copy = NULL;
+    CopyImage(image1, &copy);
+    image1.copy = &copy;
+    Image copy2;
+    copy2.data = NULL;
+    copy2.copy = NULL;
+    CopyImage(image1, &copy2);
+    copy.copy = &copy2;
+
+
+    //Create List and fill it
+    ListHead *listHead = InitListHead();
+    Parse_Image2(image1, listHead);
+
+    //Load image database
+    ListHead *db = InitListHead();
+    LoadImageData(db);
+
+
+    //Create output file
+    FILE *file = fopen("output.txt", "w+");
+    if (file == NULL)
+        printf("Unexpected error when opening file !");
+
+    ReadListNoAi(image1, file, listHead, db);
     fclose(file);
 
     //free list
