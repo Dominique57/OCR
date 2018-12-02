@@ -773,8 +773,6 @@ Image cut_new(char *path, char *text, int learningIteration)
     Parse_Image2(image1, listHead);
 
 
-    printf("Parse done\n");
-
     //if we want to learn, do the iterations
     char *textPointer = text;
     char **textCur = &text;
@@ -783,6 +781,13 @@ Image cut_new(char *path, char *text, int learningIteration)
         ReadList(image1, NULL, listHead, textCur, w1, w2);
         int isTextCorrect = 0;
         //Check if given text, if any, is correctly sized
+        if(*textCur)
+        {
+            while(**textCur == ' ' || **textCur == '\n')
+            {
+                *textCur+=1;
+            }
+        }
         if(*textCur == NULL || **textCur != '\0')
         {
             printf("TEXTE CORRESPOND PAS A LA DETECTION DE L'IMAGE!\n");
