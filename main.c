@@ -195,7 +195,8 @@ int main(int argc, char *argv[])
 
     //builder is now useless
     g_object_unref(G_OBJECT(builder));
-
+	//gtk_window_fullscreen(GTK_WINDOW(window));
+	gtk_window_maximize(GTK_WINDOW(window));
     gtk_widget_show(window);
 
     //Running the window
