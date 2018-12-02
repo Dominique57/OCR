@@ -114,7 +114,7 @@ char *ReadOutput()
 
 }
 
-void convert(GtkImage *image_glo, int iterNbr, char *text)
+void convert(GtkImage *image_glo, int iterNbr, char *text, int useAlgo)
 {
 	// Simon's testing
 	Image image;
@@ -130,8 +130,15 @@ void convert(GtkImage *image_glo, int iterNbr, char *text)
 		printf("File not found !\n filename=%s\n",filename);
 	}
 	//char text[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789";
-	
-	Image cutted = cut_new(filename, text, iterNbr);
+	Image cutted;
+	if (useAlgo)
+	{
+		cutted=cut_noAI(filename);
+	}
+	else
+	{
+		cutted = cut_new(filename, text, iterNbr);
+	}
 	char n[]="converted.bmp";
 	array_to_bmp(cutted.data, cutted.w, cutted.h, filename, n);
 	gtk_image_set_from_file(GTK_IMAGE(image_glo), n);
@@ -160,7 +167,7 @@ void train_NN(GtkWidget *Btn, GtkTextBuffer *input_buffer)
 	int iterNbr=gtk_spin_button_get_value_as_int(IterInput);
 	
 
-    convert(image_glo, iterNbr, text);
+    convert(image_glo, iterNbr, text, 0);
 	
 	text=ReadOutput();
 
@@ -171,7 +178,15 @@ void train_NN(GtkWidget *Btn, GtkTextBuffer *input_buffer)
 
 void test_NN(GtkWidget *Btn)
 {
-	convert(image_glo, 0, NULL);
+	convert(image_glo, 0, NULL, 0);
+	char *text=ReadOutput();
+	gtk_text_buffer_set_text(NNOutputTest, text, strlen(text));
+	free(text);
+}
+
+void test_NN_algo(GtkWidget *Btn)
+{
+	convert(image_glo, 0, NULL, 1);
 	char *text=ReadOutput();
 	gtk_text_buffer_set_text(NNOutputTest, text, strlen(text));
 	free(text);
