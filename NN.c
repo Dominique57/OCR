@@ -3,16 +3,9 @@
 #include <math.h>
 #include "NN.h"
 
-//Defining layers
-//#define nbInput 256
-//#define nbHidden 256
+const float eta = 0.1;
 
-//Possible outputs
-//#define nbOutput 72
-const float eta = 0.02f;
-
-const char chars[] =
-"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789";
+const char chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!?:'-()0123456789";
 
 //Export/import
 typedef struct Network
@@ -148,32 +141,31 @@ float Error(float output, unsigned char derivate)
 
 }
 
-void Backpropagation(unsigned char m[], float w1[], float w2[], float output[],
-        size_t target, float outh[], float sumExp, float outexp[])
+void Backpropagation(unsigned char m[], float w1[], float w2[], float output[], size_t target, float outh[], float sumExp, float outexp[])
 {
   size_t i = target;
 	//for (size_t i = 0; i < nbOutput; i++) {
 
     //Update w2 biases
-    float deltab2 = eta * Error(output[target], 1) * SoftmaxDeriv(output[i]);
-    w2[nbHidden * nbOutput + i] -= deltab2;
+		float deltab2 = eta * Error(output[target], 1) * SoftmaxDeriv(output[i]);
+		w2[nbHidden * nbOutput + i] -= deltab2;
 
-    for (size_t j = 0; j < nbHidden; j++) {
+		for (size_t j = 0; j < nbHidden; j++) {
 
-    //Update w1 biases
-    float deltab1 = deltab2 * w2[i * nbHidden + j] * Sigmoid(outh[j], 1);
-    w1[nbHidden * nbInput + j] -= deltab1;
+      	//Update w1 biases
+  			float deltab1 = deltab2 * w2[i * nbHidden + j] * Sigmoid(outh[j], 1);
+  			w1[nbHidden * nbInput + j] -= deltab1;
 
-    for (size_t k = 0; k < nbInput; k++) {
-        //Update w1
-        float deltaw1 = deltab1 * m[k];
-        w1[j * nbInput + k] -= deltaw1;
-    }
+			for (size_t k = 0; k < nbInput; k++) {
+				//Update w1
+				float deltaw1 = deltab1 * m[k];
+				w1[j * nbInput + k] -= deltaw1;
+			}
 
-        //Update w2
-        float deltaw2 = deltab2 * outh[j];
-        w2[i * nbHidden + j] -= deltaw2;
-    }
+			//Update w2
+			float deltaw2 = deltab2 * outh[j];
+			w2[i * nbHidden + j] -= deltaw2;
+		}
 
 
 	//}
@@ -267,46 +259,4 @@ void Initialization(float w1[], float w2[], unsigned char import)
 		for (size_t i = 0; i < totalW2; i++)
 			w2[i] = 2.0f*rand()/RAND_MAX - 1;
 	}
-}
-
-
-int test()
-{
-	//
-	// Initialization
-	//
-	float w1[nbInput * nbHidden + nbHidden];
-	float w2[nbHidden * nbOutput + nbOutput];
-	Initialization(w1, w2, 1);
-
-	//
-	// Testing
-	/*
-
-	unsigned char m[16*16];
-	for (size_t i = 0; i < 256; i++) {
-		m[i] = 1;
-	}
-
-	for (size_t i = 0; i < 10000; i++)
-		Prediction(m, w1, w2, '?');
-	*/
-
-
-	printf("w1[5]=%f", w1[5]);
-	printf(", w2[5]=%f\n", w2[5]);
-
-	//
-	//TEST SAVE
-	/*
-	Network *network=CreateNetwork(w1, w2);
-	printf("w1[5]=%f, w2[5]=%f\n", network->ws[5],
-	 network->ws[(nbInput+1)*nbHidden+5]);
-	if (SaveNetwork(w1, w2))
-	{
-		printf("error saving network\n");
-		return 1;
-	}
-	*/
-	return 0;
 }
