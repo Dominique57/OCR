@@ -8,7 +8,136 @@
 #include <time.h>
 #include <sys/time.h>
 
+// DRAWING FUNCTIONS
+/*
+ * action to do when character position found
+ * param :
+ *      rect: rectangle to draw
+ *      image: image where grapgical result will be saved
+ *      hor_val: horizontal value to apply
+ *      ver_val: vertical value to apply
+ * Take note : corners will be defined by hor_val
+ */
+void DrawRect(Rect rect, Image image, int hor_val, int ver_val)
+{
+    DrawRect_ver(rect, image, ver_val);
+    DrawRect_hor(rect, image, hor_val);
+}
 
+/*
+ * Draws the horizontal borders of the rect in given image
+ * param :
+ *      rect: rectangle to draw
+ *      image: image where grapgical result will be saved
+ *      val: value to apply
+ */
+void DrawRect_hor(Rect rect, Image image, int val)
+{
+    int ypos = rect.topLeft.y * image.w;
+    for (int x = rect.topLeft.x; x <= rect.downRight.x; ++x)
+    {
+        int pos = ypos + x;
+        image.data[pos] = val;
+    }
+    ypos = rect.downRight.y * image.w;
+    for (int x = rect.topLeft.x; x <= rect.downRight.x; ++x)
+    {
+        int pos = ypos + x;
+        image.data[pos] = val;
+    }
+}
+
+/*
+ * Draws the vertical borders of the rect in given image
+ * param :
+ *      rect: rectangle to draw
+ *      image: image where grapgical result will be saved
+ *      val: value to apply
+ */
+void DrawRect_ver(Rect rect, Image image, int val)
+{
+    int xpos = rect.topLeft.x;
+    for (int y = rect.topLeft.y; y <= rect.downRight.y; ++y)
+    {
+        int pos = xpos + y * image.w;
+        image.data[pos] = val;
+    }
+    xpos = rect.downRight.x;
+    for (int y = rect.topLeft.y; y <= rect.downRight.y; ++y)
+    {
+        int pos = xpos + y * image.w;
+        image.data[pos] = val;
+    }
+}
+
+// IMAGE STRUCT FUNCTION
+/*
+ * Sends back a copy of a given Image struct
+ * param :
+ *      image: image where informations will be read
+ *      dest : pointer to image where data will be copied
+ */
+void CopyImage(Image image, Image *dest)
+{
+    if(dest == NULL)
+        return;
+    size_t arrSize = (image.h * image.w);
+    dest->w = image.w;
+    dest->h = image.h;
+
+    if(dest->data)
+        free(dest->data);
+
+    dest->data = malloc(image.h * image.w * sizeof(unsigned char));
+    if(dest->data == NULL)
+    {
+        printf("No free memory availble ! Image copy impossible !\n");
+        return;
+    }
+
+    for (size_t k = 0; k < arrSize; ++k)
+    {
+        dest->data[k] = image.data[k];
+    }
+}
+
+/*
+ * Frees the image, that is to say the malloc of data
+ * param :
+ *      image : image to free
+ */
+void FreeImage(Image *image)
+{
+    if(image->data)
+    {
+        free(image->data);
+        image->data = NULL;
+    }
+    if(image->copy)
+    {
+        FreeImage(image->copy);
+        image->copy = NULL;
+    }
+}
+
+/*
+ * Init a malloc - saved Image at NULL
+ * param :
+ *      void
+ */
+Image *InitImage()
+{
+    Image *p = malloc(sizeof(Image));
+    if(!p)
+        return NULL;
+    p->w = 0;
+    p->h = 0;
+    p->data = NULL;
+    p->copy= NULL;
+    return p;
+}
+
+// OLD VERSION
 /*
  * determines the average space between caracters of a line
  * param :
@@ -71,6 +200,86 @@ int GetLineThresold(Image image, Rect line)
     return value * 1.6;
 }
 
+/*
+ * Old version of detecting chars
+ * param :
+ *      image : image to analyse
+ *      line : current line
+ *      list : list to add the elements in
+ */
+void CutChar2(Image image, Rect line, ListHead *list)
+{
+    int thresold = GetLineThresold(image, line);
+
+    int xl = line.topLeft.x, xr = line.topLeft.x;
+
+    int active = 0;
+    Rect charPos;
+    charPos.topLeft.y = line.topLeft.y;
+    charPos.downRight.y = line.downRight.y;
+    int x = line.topLeft.x;
+    for (; x <= line.downRight.x; ++x)
+    {
+        int y = line.topLeft.y;
+        for (; y <= line.downRight.y; ++y)
+        {
+            int pos = y * image.w + x;
+            if (image.data[pos] == 1 )
+            {
+                if  (active == 0)
+                {
+                    charPos.topLeft.x = x;
+                    active = 1;
+                    // compared computed space to thresold
+                    xr = x;
+                    if (xr - xl > thresold)
+                    {
+                        Rect rect;
+                        rect.topLeft.x = xl;
+                        rect.downRight.x = xr-1;
+                        rect.topLeft.y = line.topLeft.y;
+                        rect.downRight.y = line.downRight.y;
+                        DrawRect_hor(rect, *(image.copy), 3);
+
+                        ListChar *listChar = InitListChar();
+                        listChar->type = 1;
+                        CopyRect(rect, &(listChar->pos));
+                        AddListChar(list, listChar);
+                    }
+                }
+                break;
+            }
+        }
+        if  (y > line.downRight.y)
+        {
+            if (active == 1)
+            {
+                active = 0;
+                charPos.downRight.x = x - 1;
+                DrawRect(charPos, *(image.copy), 5, 5);
+                xl = x;
+
+                ListChar *listChar = InitListChar();
+                listChar->type = 0;
+                CopyRect(charPos, &(listChar->pos));
+                AddListChar(list, listChar);
+            }
+        }
+    }
+    if(active)
+    {
+        charPos.downRight.x = x - 1;
+        DrawRect(charPos, *(image.copy), 5, 5);
+
+        ListChar *listChar = InitListChar();
+        listChar->type = 0;
+        CopyRect(charPos, &(listChar->pos));
+        AddListChar(list, listChar);
+    }
+}
+
+
+//PRECISE-VERSION
 /*
  * Sends a rect of the image without white borders (no need to save them)
  * param :
@@ -152,115 +361,11 @@ Rect CutBorder(Image image)
 }
 
 /*
- * Sends back a copy of a given Image struct
+ *  Detects the line and makes the call to detect the chars
  * param :
- *      image: image where informations will be read
- *      dest : pointer to image where data will be copied
- */
-void CopyImage(Image image, Image *dest)
-{
-    if(dest == NULL)
-        return;
-    size_t arrSize = (image.h * image.w);
-    dest->w = image.w;
-    dest->h = image.h;
-
-    if(dest->data)
-        free(dest->data);
-
-    dest->data = malloc(image.h * image.w * sizeof(unsigned char));
-    if(dest->data == NULL)
-    {
-        printf("No free memory availble ! Image copy impossible !\n");
-        return;
-    }
-
-    for (size_t k = 0; k < arrSize; ++k)
-    {
-        dest->data[k] = image.data[k];
-    }
-}
-
-/*
- * Frees the image, that is to say the malloc of data
- * param :
- *      image : image to free
- */
-void FreeImage(Image *image)
-{
-    if(image->data)
-    {
-        free(image->data);
-        image->data = NULL;
-    }
-    if(image->copy)
-    {
-        FreeImage(image->copy);
-        image->copy = NULL;
-    }
-}
-
-Image *InitImage()
-{
-    Image *p = malloc(sizeof(Image));
-    if(!p)
-        return NULL;
-    p->w = 0;
-    p->h = 0;
-    p->data = NULL;
-    p->copy= NULL;
-    return p;
-}
-
-void LoadImageData(ListHead *list)
-{
-    char carac = 'a';
-    char path[] = "letters/normal/a.bmp";
-    while(carac <= 'z')
-    {
-        path[15] = carac;
-        LoadImageElt(list, path, carac);
-        carac++;
-    }
-    carac = 'a';
-    char path2[] = "letters/normal/caps-a.bmp";
-    while(carac <= 'z')
-    {
-        path2[20] = carac;
-        LoadImageElt(list, path2, 'A' + carac - 'a');
-        carac++;
-    }
-    carac = '0';
-    char path3[] = "letters/normal/0.bmp";
-    while(carac <= '9')
-    {
-        path3[15] = carac;
-        LoadImageElt(list, path3, carac);
-        carac++;
-    }
-    /*
-    ListImage *cur = list->head;
-    while(cur)
-    {
-        print_Array(cur->image->data, 16, 16);
-        cur = cur->next;
-    }
-     */
-}
-
-void LoadImageElt(ListHead *list, char *path, char carac)
-{
-    ListImage *listImage = InitListImage();
-    Image *image = InitImage();
-    listImage->image = image;
-    listImage->carac = carac;
-    load_image(path, image);
-    if(image->data)
-        AddListImage(list, listImage);
-    else
-        FreeListImage(listImage);
-}
-
+ *      image : image to analyse
+ *      line : current line
+ *      list : list to add the elements in */
 void cutLine2(Image image, Rect rect, ListHead *list)
 {
     int active = 0;
@@ -310,6 +415,13 @@ void cutLine2(Image image, Rect rect, ListHead *list)
     }
 }
 
+/*
+ * Go thorugh the line and detect all caracter with the recusrive algorithm
+ * param :
+ *      image : image to analyse
+ *      line : current line
+ *      list : list to add the elements in
+ */
 void CutChar3(Image image, Rect line, ListHead *list)
 {
     int x = line.topLeft.x;
@@ -346,6 +458,14 @@ void CutChar3(Image image, Rect line, ListHead *list)
     AddSpace(list, image.copy);
 }
 
+/*
+ *  Go trough the line data to generate thresold of space
+ *  go the other way to determine if distance between char are space
+ *  if distance superior to thresold, space is inserted
+ * param :
+ *      list : list to add elements in
+ *      image : image to read from but also to draw to
+ */
 void AddSpace(ListHead *list, Image *image)
 {
     unsigned long spaceCount = 0;
@@ -395,6 +515,12 @@ void AddSpace(ListHead *list, Image *image)
     }
 }
 
+/*
+ * Check if the current found element is phased with the previous one
+ * If so, merge them together : exemple the i dot with the bar will be merged
+ * param :
+ *      list : head of the list to check
+ */
 void CheckElement(ListHead *list)
 {
     if(!IsEmpty(list))
@@ -453,6 +579,13 @@ void CheckElement(ListHead *list)
     }
 }
 
+/*
+ * Determine the next pixel to make the recusrive call
+ * param :
+ *      image : image to read from
+ *      line : line currently being analysed
+ *      xref and yref : values of next pixel found (-1 if none found)
+ */
 void NextCall(Image image, Rect line, int *xref, int *yref)
 {
     int x = line.topLeft.x;
@@ -474,6 +607,15 @@ void NextCall(Image image, Rect line, int *xref, int *yref)
     *yref = -1;
 }
 
+/*
+ * Recusrive function to determine caracter position
+ * param :
+ *      image : image to read from
+ *      line : line where caracter is sitting in
+ *      rect : rect to update with char's position
+ *      x and y : current position in line
+ *
+ */
 void CutCharRec(Image image, Rect line, Rect *rect, int y, int x)
 {
     int a = y <= line.downRight.y;
@@ -502,129 +644,20 @@ void CutCharRec(Image image, Rect line, Rect *rect, int y, int x)
     }
 }
 
-void CutChar2(Image image, Rect line, ListHead *list)
-{
-    int thresold = GetLineThresold(image, line);
-
-    int xl = line.topLeft.x, xr = line.topLeft.x;
-
-    int active = 0;
-    Rect charPos;
-    charPos.topLeft.y = line.topLeft.y;
-    charPos.downRight.y = line.downRight.y;
-    int x = line.topLeft.x;
-    for (; x <= line.downRight.x; ++x)
-    {
-        int y = line.topLeft.y;
-        for (; y <= line.downRight.y; ++y)
-        {
-            int pos = y * image.w + x;
-            if (image.data[pos] == 1 )
-            {
-                if  (active == 0)
-                {
-                    charPos.topLeft.x = x;
-                    active = 1;
-                    // compared computed space to thresold
-                    xr = x;
-                    if (xr - xl > thresold)
-                    {
-                        Rect rect;
-                        rect.topLeft.x = xl;
-                        rect.downRight.x = xr-1;
-                        rect.topLeft.y = line.topLeft.y;
-                        rect.downRight.y = line.downRight.y;
-                        DrawRect_hor(rect, *(image.copy), 3);
-
-                        ListChar *listChar = InitListChar();
-                        listChar->type = 1;
-                        CopyRect(rect, &(listChar->pos));
-                        AddListChar(list, listChar);
-                    }
-                }
-                break;
-            }
-        }
-        if  (y > line.downRight.y)
-        {
-            if (active == 1)
-            {
-                active = 0;
-                charPos.downRight.x = x - 1;
-                DrawRect(charPos, *(image.copy), 5, 5);
-                xl = x;
-
-                // CorrectRect(image, &charPos);
-
-                ListChar *listChar = InitListChar();
-                listChar->type = 0;
-                CopyRect(charPos, &(listChar->pos));
-                AddListChar(list, listChar);
-            }
-        }
-    }
-    if(active)
-    {
-        charPos.downRight.x = x - 1;
-        DrawRect(charPos, *(image.copy), 5, 5);
-
-        // CorrectRect(image, &charPos);
-
-        ListChar *listChar = InitListChar();
-        listChar->type = 0;
-        CopyRect(charPos, &(listChar->pos));
-        AddListChar(list, listChar);
-    }
-}
-
-void CorrectRect(Image i, Rect *r)
-{
-    int active = 1;
-    for (int y = r->downRight.y; y >= r->topLeft.y && active; --y)
-    {
-        for (int x = r->topLeft.x; x <= r->downRight.x; ++x)
-        {
-            int pos = y * i.w + x;
-            if(i.data[pos] == 1)
-            {
-                r->downRight.y = y;
-                active = 0;
-                break;
-            }
-        }
-    }
-}
 
 /*
  * Applies caracter cut of the image in the line specified bu rect
- * AND calculates linethresold to estimate average space and detect spaces
  * Also writes in FILE f the position of detected caracters and spaces too
  * param :
  *      image: image where informations will be read
  *      rect: rectangle around the char
  *      result: image where graphical result will be saved
  *      f: file in which OCR result will be written
- *      w1 and w2, neural network parameters
+ *      w1 and w2 : neural network parameters
+ *      t : text pointer to pointer to learn (if given)
  */
 void CharProcess(Image i, Rect r, FILE *f, float *w1, float *w2, char **t)
 {
-    /*
-    int active = 1;
-    for (int y = r.downRight.y; y >= r.topLeft.y && active; --y)
-    {
-        for (int x = r.topLeft.x; x <= r.downRight.x; ++x)
-        {
-            int pos = y * i.w + x;
-            if(i.data[pos] == 1)
-            {
-                r.downRight.y = y;
-                active = 0;
-                break;
-            }
-        }
-    }
-    */
-    // check if multiple caracters in the same rect
     unsigned char resized[256];
     resize(i, r, resized);
     unsigned char carac = 0;
@@ -640,7 +673,6 @@ void CharProcess(Image i, Rect r, FILE *f, float *w1, float *w2, char **t)
             }
             else
             {
-                //printf("Associated car %c\n\n", carac);
                 *t = *t + 1;
             }
         }while (carac == ' ' || carac == '\n');
@@ -652,74 +684,14 @@ void CharProcess(Image i, Rect r, FILE *f, float *w1, float *w2, char **t)
 }
 
 /*
- * action to do when character position found
+ * Read the generated list, fill the file if wanted, train NN if wanted
  * param :
- *      rect: rectangle to draw
- *      image: image where grapgical result will be saved
- *      hor_val: horizontal value to apply
- *      ver_val: vertical value to apply
- * Take note : corners will be defined by hor_val
+ *      i : image to analyse
+ *      f : file to write outputs to
+ *      l : list to add caracters in
+ *      t : image-associated text to train NN
+ *      w1 and w2 : NN values to train or predict
  */
-void DrawRect(Rect rect, Image image, int hor_val, int ver_val)
-{
-    DrawRect_ver(rect, image, ver_val);
-    DrawRect_hor(rect, image, hor_val);
-}
-
-/*
- * Draws the horizontal borders of the rect in given image
- * param :
- *      rect: rectangle to draw
- *      image: image where grapgical result will be saved
- *      val: value to apply
- */
-void DrawRect_hor(Rect rect, Image image, int val)
-{
-    int ypos = rect.topLeft.y * image.w;
-    for (int x = rect.topLeft.x; x <= rect.downRight.x; ++x)
-    {
-        int pos = ypos + x;
-        image.data[pos] = val;
-    }
-    ypos = rect.downRight.y * image.w;
-    for (int x = rect.topLeft.x; x <= rect.downRight.x; ++x)
-    {
-        int pos = ypos + x;
-        image.data[pos] = val;
-    }
-}
-
-/*
- * Draws the vertical borders of the rect in given image
- * param :
- *      rect: rectangle to draw
- *      image: image where grapgical result will be saved
- *      val: value to apply
- */
-void DrawRect_ver(Rect rect, Image image, int val)
-{
-    int xpos = rect.topLeft.x;
-    for (int y = rect.topLeft.y; y <= rect.downRight.y; ++y)
-    {
-        int pos = xpos + y * image.w;
-        image.data[pos] = val;
-    }
-    xpos = rect.downRight.x;
-    for (int y = rect.topLeft.y; y <= rect.downRight.y; ++y)
-    {
-        int pos = xpos + y * image.w;
-        image.data[pos] = val;
-    }
-}
-
-Image Parse_Image2(Image image, ListHead *list)
-{
-    Rect border;
-    border = CutBorder(image);
-    cutLine2(image, border, list);
-    return image;
-}
-
 void ReadList(Image i, FILE *f, ListHead *l, char **t, float *w1, float *w2)
 {
     if(IsEmpty(l))
@@ -740,6 +712,28 @@ void ReadList(Image i, FILE *f, ListHead *l, char **t, float *w1, float *w2)
     }
 }
 
+/*
+ * Parses an image without the border
+ * param :
+ *      image : image to analyse
+ *      list : list to put caracters in
+ */
+Image Parse_Image2(Image image, ListHead *list)
+{
+    Rect border;
+    border = CutBorder(image);
+    cutLine2(image, border, list);
+    return image;
+}
+
+/*
+ * Launch the segmentation with Neural network and eventually learn
+ * param :
+ *      path : path to image to analyse
+ *      text : if given, text associated to the text to learn / train NN
+ *      learningiteration : how many time the image will be used to learn
+ *      loadsave : true means the saved Neural Network will be load, else random
+ */
 Image cut_new(char *path, char *text, int learningIteration, int loadsaved)
 {
     //Load image and a copy
@@ -837,6 +831,15 @@ Image cut_new(char *path, char *text, int learningIteration, int loadsaved)
     return *(image1.copy);
 }
 
+// NON-NEURAL-NETWORK functions
+/*
+ * Process a single caracter recognition with the non-NEURAL OCR
+ * param :
+ *      i : image
+ *      r : position of caracter
+ *      f : file to write output in
+ *      db : database to determine the caracter
+ */
 void CharProcessNoAi(Image i, Rect r, FILE *f, ListHead *db)
 {
     unsigned char resized[256];
@@ -894,6 +897,15 @@ void CharProcessNoAi(Image i, Rect r, FILE *f, ListHead *db)
         fputc('?', f);
 }
 
+/*
+ * Reads list generated by the image segmentation and process all caracters in it
+ * processing is non-Neural network
+ * param :
+ *      image : image to read inputs
+ *      f : file to write outputs in
+ *      l : list header to caracters
+ *      l : list header to NON-NEURAL caracter database
+ */
 void ReadListNoAi(Image i, FILE *f, ListHead *l, ListHead *db)
 {
     if(IsEmpty(l))
@@ -914,6 +926,11 @@ void ReadListNoAi(Image i, FILE *f, ListHead *l, ListHead *db)
     }
 }
 
+/*
+ * Launched a cut with the Non-neural network OCR
+ * param :
+ *      path : path to the image to analyse
+ */
 Image cut_noAI(char *path)
 {
     //Load image and a copy
@@ -953,4 +970,65 @@ Image cut_noAI(char *path)
     //free list
     FreeList(listHead);
     return *(image1.copy);
+}
+
+/*
+ * Load images for algorithm OCR from files and add them to a list
+ * param :
+ *      list : list to add the caracter's data
+ */
+void LoadImageData(ListHead *list)
+{
+    char carac = 'a';
+    char path[] = "letters/normal/a.bmp";
+    while(carac <= 'z')
+    {
+        path[15] = carac;
+        LoadImageElt(list, path, carac);
+        carac++;
+    }
+    carac = 'a';
+    char path2[] = "letters/normal/caps-a.bmp";
+    while(carac <= 'z')
+    {
+        path2[20] = carac;
+        LoadImageElt(list, path2, 'A' + carac - 'a');
+        carac++;
+    }
+    carac = '0';
+    char path3[] = "letters/normal/0.bmp";
+    while(carac <= '9')
+    {
+        path3[15] = carac;
+        LoadImageElt(list, path3, carac);
+        carac++;
+    }
+    /*
+    ListImage *cur = list->head;
+    while(cur)
+    {
+        print_Array(cur->image->data, 16, 16);
+        cur = cur->next;
+    }
+     */
+}
+
+/*
+ * Load a specific image to the non-OCR algorithm
+ * param :
+ *      list : list to add the caracter's data
+ *      path : path to image
+ *      carac : the caracter associated to the pictures
+ */
+void LoadImageElt(ListHead *list, char *path, char carac)
+{
+    ListImage *listImage = InitListImage();
+    Image *image = InitImage();
+    listImage->image = image;
+    listImage->carac = carac;
+    load_image(path, image);
+    if(image->data)
+        AddListImage(list, listImage);
+    else
+        FreeListImage(listImage);
 }
