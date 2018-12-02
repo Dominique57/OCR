@@ -6,6 +6,7 @@
 #include "resize.h"
 #include "NN.h"
 #include <time.h>
+#include <sys/time.h>
 
 
 
@@ -269,8 +270,8 @@ void CutChar3(Image image, Rect line, ListHead *list)
         listChar->pos.topLeft.y = line.topLeft.y;
         int Hline = line.downRight.y-line.topLeft.y;
         int Hchar = listChar->pos.downRight.y - listChar->pos.topLeft.y;
-        if(Hchar < Hline/2)
-            listChar->pos.downRight.y = listChar->pos.topLeft.y+Hline/2;
+        if(Hchar < 3*Hline/4)
+            listChar->pos.downRight.y = listChar->pos.topLeft.y+3*Hline/4;
         AddListChar(list, listChar);
         CheckElement(list);
 
@@ -547,6 +548,7 @@ void CorrectRect(Image i, Rect *r)
  */
 void CharProcess(Image i, Rect r, FILE *f, float *w1, float *w2, char **t)
 {
+    /*
     int active = 1;
     for (int y = r.downRight.y; y >= r.topLeft.y && active; --y)
     {
@@ -561,6 +563,7 @@ void CharProcess(Image i, Rect r, FILE *f, float *w1, float *w2, char **t)
             }
         }
     }
+    */
     // check if multiple caracters in the same rect
     unsigned char resized[256];
     resize(i, r, resized);
@@ -581,6 +584,7 @@ void CharProcess(Image i, Rect r, FILE *f, float *w1, float *w2, char **t)
                 *t = *t + 1;
             }
         }while (carac == ' ' || carac == '\n');
+        array_to_bmp(resized, 16, 16, "dataset/blank.bmp", NULL);
 
     }
     char output = Prediction(resized, w1, w2, carac);
